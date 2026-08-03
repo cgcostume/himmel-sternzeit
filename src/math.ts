@@ -23,3 +23,14 @@ export function normalizeDegrees(deg: number): number {
 export function dayFraction(hour: number, minute: number, second: number): number {
     return (hour + (minute + second / 60) / 60) / 24;
 }
+
+export function arcsecondsToDegrees(arcseconds: number): number {
+    return arcseconds / 3600;
+}
+
+/** Mean distance from Earth to Sun, in kilometers, used to convert between AU and km. */
+export const ASTRONOMICAL_UNIT_KM = 149598000;
+
+export function auToKm(au: number): number {
+    return au * ASTRONOMICAL_UNIT_KM;
+}

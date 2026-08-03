@@ -1,4 +1,4 @@
-import { dayFraction, frac, toInt } from "./internal/math.js";
+import { dayFraction, frac, toInt } from "./math.js";
 
 /** A calendar date/time used for astronomical calculations. */
 export interface AstronomicalTime {

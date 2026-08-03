@@ -1,4 +1,4 @@
-import { normalizeDegrees, radToDeg } from "./internal/math.js";
+import { normalizeDegrees, radToDeg } from "./math.js";
 import {
     type AstronomicalTime,
     julianCenturiesSinceStandardEquinox,
