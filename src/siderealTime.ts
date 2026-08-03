@@ -1,3 +1,4 @@
+// See ../GLOSSARY.md for sidereal time.
 import { normalizeDegrees, radToDeg } from "./math.js";
 import {
     type AstronomicalTime,

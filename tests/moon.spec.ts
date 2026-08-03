@@ -17,8 +17,8 @@ test("moon.meanAnomaly matches Meeus' worked example 47.a", () => {
     expect(precise.moon.meanAnomaly(JDE)).toBeCloseTo(5.150833, 3);
 });
 
-test("moon.meanLatitude matches Meeus' worked example 47.a", () => {
-    expect(precise.moon.meanLatitude(JDE)).toBeCloseTo(219.889721, 3);
+test("moon.meanArgumentOfLatitude matches Meeus' worked example 47.a", () => {
+    expect(precise.moon.meanArgumentOfLatitude(JDE)).toBeCloseTo(219.889721, 3);
 });
 
 test("moon.position matches Meeus' worked example 47.a", () => {

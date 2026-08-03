@@ -1,16 +1,17 @@
-import { arcsecondsToDegrees, degToRad, normalizeDegrees, radToDeg } from "./math.js";
+// See ../GLOSSARY.md for obliquity, nutation, orbital eccentricity, atmospheric refraction, and apparent angular diameter.
+import { arcsecondsToDegrees, degToRad, radToDeg } from "./math.js";
 import * as moon from "./moon.js";
 import * as sun from "./sun.js";
 import { type JulianDay, julianCenturiesSinceStandardEquinox } from "./time.js";
 
 /** Mean radius of the Earth, in kilometers. http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html */
-export const EARTH_MEAN_RADIUS_KM = 6371.0;
+export const MEAN_RADIUS_KM = 6371.0;
 
 /** Thickness of the atmosphere if its density were uniform, in kilometers. */
-export const EARTH_ATMOSPHERE_THICKNESS_KM = 7.994;
+export const ATMOSPHERE_THICKNESS_KM = 7.994;
 
 /** Actual thickness of the atmosphere, in kilometers. */
-export const EARTH_ATMOSPHERE_THICKNESS_NON_UNIFORM_KM = 85.0;
+export const ATMOSPHERE_THICKNESS_NON_UNIFORM_KM = 85.0;
 
 /** Faintest apparent magnitude generally visible to the naked eye. http://www.astronomynotes.com/starprop/s4.htm */
 export const APPARENT_MAGNITUDE_LIMIT = 6.5;
@@ -21,34 +22,32 @@ export const APPARENT_MAGNITUDE_LIMIT = 6.5;
  */
 export function orbitEccentricity(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
-    const E = 0.01670862 + T * (-0.000042037 + T * (-0.0000001236 + T * 0.00000000004));
-
-    return normalizeDegrees(E);
+    return 0.01670862 + T * (-0.000042037 + T * (-0.0000001236 + T * 0.00000000004));
 }
 
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html */
 export function orbitEccentricityApprox(): number {
-    return normalizeDegrees(0.01671022);
+    return 0.01671022;
 }
 
 /** In radians. */
 export function apparentAngularSunDiameter(t: JulianDay): number {
-    return 2 * Math.atan(sun.SUN_MEAN_RADIUS_KM / sun.distance(t));
+    return 2 * Math.atan(sun.MEAN_RADIUS_KM / sun.distance(t));
 }
 
 /** In radians. */
 export function apparentAngularSunDiameterApprox(t: JulianDay): number {
-    return 2 * Math.atan(sun.SUN_MEAN_RADIUS_KM / sun.distanceApprox(t));
+    return 2 * Math.atan(sun.MEAN_RADIUS_KM / sun.distanceApprox(t));
 }
 
 /** In radians. */
 export function apparentAngularMoonDiameter(t: JulianDay): number {
-    return 2 * Math.atan(moon.MOON_MEAN_RADIUS_KM / moon.distance(t));
+    return 2 * Math.atan(moon.MEAN_RADIUS_KM / moon.distance(t));
 }
 
 /** In radians. */
 export function apparentAngularMoonDiameterApprox(t: JulianDay): number {
-    return 2 * Math.atan(moon.MOON_MEAN_RADIUS_KM / moon.distanceApprox(t));
+    return 2 * Math.atan(moon.MEAN_RADIUS_KM / moon.distanceApprox(t));
 }
 
 /** Nutation in longitude (Δψ), in degrees, per Meeus' "Astronomical Algorithms" (21.A). */
@@ -59,8 +58,8 @@ export function longitudeNutation(t: JulianDay): number {
 
     const mM = degToRad(moon.meanAnomaly(t));
     const mD = degToRad(moon.meanElongation(t));
-    const mF = degToRad(moon.meanLatitude(t));
-    const O = degToRad(moon.meanOrbitLongitude(t));
+    const mF = degToRad(moon.meanArgumentOfLatitude(t));
+    const O = degToRad(moon.meanAscendingNodeLongitude(t));
 
     let Dr = 0.0;
 
@@ -138,7 +137,7 @@ export function longitudeNutation(t: JulianDay): number {
 export function longitudeNutationApprox(t: JulianDay): number {
     const sM = degToRad(sun.meanAnomalyApprox(t));
     const mM = degToRad(moon.meanAnomalyApprox(t));
-    const O = degToRad(moon.meanOrbitLongitudeApprox(t));
+    const O = degToRad(moon.meanAscendingNodeLongitudeApprox(t));
 
     return (
         -arcsecondsToDegrees(17.2) * Math.sin(O) -
@@ -156,8 +155,8 @@ export function obliquityNutation(t: JulianDay): number {
 
     const mM = degToRad(moon.meanAnomaly(t));
     const mD = degToRad(moon.meanElongation(t));
-    const mF = degToRad(moon.meanLatitude(t));
-    const O = degToRad(moon.meanOrbitLongitude(t));
+    const mF = degToRad(moon.meanArgumentOfLatitude(t));
+    const O = degToRad(moon.meanAscendingNodeLongitude(t));
 
     let De = 0.0;
 
@@ -208,7 +207,7 @@ export function obliquityNutation(t: JulianDay): number {
  * "A Physically-Based Night Sky Model" (2001).
  */
 export function obliquityNutationApprox(t: JulianDay): number {
-    const O = degToRad(moon.meanOrbitLongitudeApprox(t));
+    const O = degToRad(moon.meanAscendingNodeLongitudeApprox(t));
     const Ls = degToRad(sun.meanAnomalyApprox(t));
     const Lm = degToRad(moon.meanAnomalyApprox(t));
 
@@ -272,8 +271,8 @@ export function atmosphericRefraction(altitude: number): number {
  * is `y` (i.e. `y = sin(altitude)`), optionally corrected for atmospheric refraction.
  */
 export function viewDistanceWithinAtmosphere(y: number, refractionCorrected = false): number {
-    const t = EARTH_ATMOSPHERE_THICKNESS_KM;
-    const r = EARTH_MEAN_RADIUS_KM;
+    const t = ATMOSPHERE_THICKNESS_KM;
+    const r = MEAN_RADIUS_KM;
 
     // The correction avoids loss of precision in h at y = 1.0.
     let h = Math.asin(y * (1.0 - 1e-12));
@@ -290,5 +289,5 @@ export function viewDistanceWithinAtmosphere(y: number, refractionCorrected = fa
 
 /** This is not refraction corrected. Only valid for the Earth's actual mean radius. */
 export function viewDistanceWithinAtmosphereApprox(y: number): number {
-    return (EARTH_ATMOSPHERE_THICKNESS_KM * 1116.0) / ((y + 0.004) * 1.1116);
+    return (ATMOSPHERE_THICKNESS_KM * 1116.0) / ((y + 0.004) * 1.1116);
 }

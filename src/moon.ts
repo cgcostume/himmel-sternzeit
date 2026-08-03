@@ -1,3 +1,4 @@
+// See ../GLOSSARY.md for mean elongation, argument of latitude, ascending node, libration, and parallactic angle.
 import {
     type EclipticalCoords,
     type EquatorialCoords,
@@ -9,10 +10,16 @@ import * as earth from "./earth.js";
 import { degToRad, normalizeDegrees, radToDeg } from "./math.js";
 import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
 import * as sun from "./sun.js";
-import { type AstronomicalTime, type JulianDay, julianCenturiesSinceStandardEquinox, julianDayUT } from "./time.js";
+import {
+    type AstronomicalTime,
+    type JulianCenturies,
+    type JulianDay,
+    julianCenturiesSinceStandardEquinox,
+    julianDayUT,
+} from "./time.js";
 
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html */
-export const MOON_MEAN_RADIUS_KM = 1737.1;
+export const MEAN_RADIUS_KM = 1737.1;
 
 /** Inclination of the Moon's mean equator to the ecliptic (I), in radians. */
 const MEAN_EQUATOR_INCLINATION = degToRad(1.54242);
@@ -69,7 +76,7 @@ export function meanAnomalyApprox(t: JulianDay): number {
 }
 
 /** Mean distance of the Moon from its ascending node, in degrees, per Meeus' "Astronomical Algorithms" (45.5). */
-export function meanLatitude(t: JulianDay): number {
+export function meanArgumentOfLatitude(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
 
     const F = 93.2720993 + T * (483202.0175273 + T * (-0.0034029 + T * (-1.0 / 3526000.0 + T * (1.0 / 863310000.0))));
@@ -78,14 +85,14 @@ export function meanLatitude(t: JulianDay): number {
 }
 
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
-export function meanLatitudeApprox(t: JulianDay): number {
+export function meanArgumentOfLatitudeApprox(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
     const F = radToDeg(1.628 + 8433.4663 * T);
 
     return normalizeDegrees(F);
 }
 
-export function meanOrbitLongitude(t: JulianDay): number {
+export function meanAscendingNodeLongitude(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
 
     const O = 125.04452 + T * (-1934.136261 + T * (0.0020708 + T * (1.0 / 450000.0)));
@@ -93,7 +100,7 @@ export function meanOrbitLongitude(t: JulianDay): number {
     return normalizeDegrees(O);
 }
 
-export function meanOrbitLongitudeApprox(t: JulianDay): number {
+export function meanAscendingNodeLongitudeApprox(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
     const O = 125.04 + T * -1934.136;
 
@@ -104,7 +111,7 @@ export function meanOrbitLongitudeApprox(t: JulianDay): number {
  * Correction factor for the eccentricity of the Earth's orbit around the Sun, used in the periodic terms
  * below (AA.45.6). This is unrelated to `earth.orbitEccentricity`, which is ~60x smaller.
  */
-function eccentricityCorrection(T: JulianDay): number {
+function eccentricityCorrection(T: JulianCenturies): number {
     return 1.0 + T * (-0.002516 + T * -0.0000074);
 }
 
@@ -115,7 +122,7 @@ export function position(t: JulianDay): EclipticalCoords {
     const mL = degToRad(meanLongitude(t));
     const mM = degToRad(meanAnomaly(t));
     const mD = degToRad(meanElongation(t));
-    const mF = degToRad(meanLatitude(t));
+    const mF = degToRad(meanArgumentOfLatitude(t));
 
     const T = julianCenturiesSinceStandardEquinox(t);
 
@@ -274,7 +281,7 @@ export function positionApprox(t: JulianDay): EclipticalCoords {
     const mL = degToRad(meanLongitudeApprox(t));
     const mM = degToRad(meanAnomalyApprox(t));
     const mD = degToRad(meanElongationApprox(t));
-    const mF = degToRad(meanLatitudeApprox(t));
+    const mF = degToRad(meanArgumentOfLatitudeApprox(t));
 
     let Sl = mL;
 
@@ -306,11 +313,10 @@ export function positionApprox(t: JulianDay): EclipticalCoords {
 }
 
 export function apparentPosition(t: JulianDay): EquatorialCoords {
-    const ecl = position(t);
-    return eclipticalToEquatorial(
-        { ...ecl, longitude: ecl.longitude + earth.longitudeNutation(t) },
-        earth.meanObliquity(t),
-    );
+    // position(t) already folds longitude nutation (Δψ) into its longitude, so it isn't added again here.
+    // trueObliquity (not meanObliquity) additionally applies nutation in obliquity (Δε), matching how
+    // apparentPositionApprox uses trueObliquityApprox below.
+    return eclipticalToEquatorial(position(t), earth.trueObliquity(t));
 }
 
 export function apparentPositionApprox(t: JulianDay): EquatorialCoords {
@@ -341,7 +347,7 @@ export function distance(t: JulianDay): number {
 
     const mM = degToRad(meanAnomaly(t));
     const mD = degToRad(meanElongation(t));
-    const mF = degToRad(meanLatitude(t));
+    const mF = degToRad(meanArgumentOfLatitude(t));
 
     const T = julianCenturiesSinceStandardEquinox(t);
     const E = eccentricityCorrection(T);
@@ -415,7 +421,7 @@ export function distanceApprox(t: JulianDay): number {
     Sr += 0.000015 * Math.cos(2 * mD + mM);
     Sr += 0.000009 * Math.cos(2 * mD - sM);
 
-    return earth.EARTH_MEAN_RADIUS_KM / Sr;
+    return earth.MEAN_RADIUS_KM / Sr;
 }
 
 export interface MoonLibration {
@@ -429,26 +435,26 @@ export interface MoonLibration {
 export function opticalLibrations(t: JulianDay): MoonLibration {
     const Dr = degToRad(earth.longitudeNutation(t));
 
-    const F = degToRad(meanLatitude(t));
-    const O = degToRad(meanOrbitLongitude(t));
+    const F = degToRad(meanArgumentOfLatitude(t));
+    const O = degToRad(meanAscendingNodeLongitude(t));
 
     const ecl = position(t);
     const lo = degToRad(ecl.longitude);
     const la = degToRad(ecl.latitude);
 
-    const cos_la = Math.cos(la);
-    const sin_la = Math.sin(la);
-    const cos_I = Math.cos(MEAN_EQUATOR_INCLINATION);
-    const sin_I = Math.sin(MEAN_EQUATOR_INCLINATION);
+    const cosLa = Math.cos(la);
+    const sinLa = Math.sin(la);
+    const cosI = Math.cos(MEAN_EQUATOR_INCLINATION);
+    const sinI = Math.sin(MEAN_EQUATOR_INCLINATION);
 
     const W = normalizeRadians(lo - Dr - O);
-    const sin_W = Math.sin(W);
+    const sinW = Math.sin(W);
 
-    const A = normalizeRadians(Math.atan2(sin_W * cos_la * cos_I - sin_la * sin_I, Math.cos(W) * cos_la));
+    const A = normalizeRadians(Math.atan2(sinW * cosLa * cosI - sinLa * sinI, Math.cos(W) * cosLa));
 
     return {
         longitude: radToDeg(A) - radToDeg(F),
-        latitude: radToDeg(Math.asin(-sin_W * cos_la * sin_I - sin_la * cos_I)),
+        latitude: radToDeg(Math.asin(-sinW * cosLa * sinI - sinLa * cosI)),
     };
 }
 
@@ -456,26 +462,26 @@ export function opticalLibrations(t: JulianDay): MoonLibration {
 export function opticalLibrationsApprox(t: JulianDay): MoonLibration {
     const Dr = degToRad(earth.longitudeNutationApprox(t));
 
-    const F = degToRad(meanLatitudeApprox(t));
-    const O = degToRad(meanOrbitLongitudeApprox(t));
+    const F = degToRad(meanArgumentOfLatitudeApprox(t));
+    const O = degToRad(meanAscendingNodeLongitudeApprox(t));
 
     const ecl = positionApprox(t);
     const lo = degToRad(ecl.longitude);
     const la = degToRad(ecl.latitude);
 
-    const cos_la = Math.cos(la);
-    const sin_la = Math.sin(la);
-    const cos_I = Math.cos(MEAN_EQUATOR_INCLINATION);
-    const sin_I = Math.sin(MEAN_EQUATOR_INCLINATION);
+    const cosLa = Math.cos(la);
+    const sinLa = Math.sin(la);
+    const cosI = Math.cos(MEAN_EQUATOR_INCLINATION);
+    const sinI = Math.sin(MEAN_EQUATOR_INCLINATION);
 
     const W = normalizeRadians(lo - Dr - O);
-    const sin_W = Math.sin(W);
+    const sinW = Math.sin(W);
 
-    const A = normalizeRadians(Math.atan2(sin_W * cos_la * cos_I - sin_la * sin_I, Math.cos(W) * cos_la));
+    const A = normalizeRadians(Math.atan2(sinW * cosLa * cosI - sinLa * sinI, Math.cos(W) * cosLa));
 
     return {
         longitude: radToDeg(A) - radToDeg(F),
-        latitude: radToDeg(Math.asin(-sin_W * cos_la * sin_I - sin_la * cos_I)),
+        latitude: radToDeg(Math.asin(-sinW * cosLa * sinI - sinLa * cosI)),
     };
 }
 
@@ -495,8 +501,8 @@ export function parallacticAngle(time: AstronomicalTime, latitude: number, longi
     // Local hour angle (AA.p88).
     const H = s + lo - ra;
 
-    const cos_la = Math.cos(la);
-    const P = Math.atan2(Math.sin(H) * cos_la, Math.sin(la) * Math.cos(de) - Math.sin(de) * cos_la * Math.cos(H));
+    const cosLa = Math.cos(la);
+    const P = Math.atan2(Math.sin(H) * cosLa, Math.sin(la) * Math.cos(de) - Math.sin(de) * cosLa * Math.cos(H));
 
     return radToDeg(P);
 }
@@ -516,8 +522,8 @@ export function parallacticAngleApprox(time: AstronomicalTime, latitude: number,
 
     const H = s + lo - ra;
 
-    const cos_la = Math.cos(la);
-    const P = Math.atan2(Math.sin(H) * cos_la, Math.sin(la) * Math.cos(de) - Math.sin(de) * cos_la * Math.cos(H));
+    const cosLa = Math.cos(la);
+    const P = Math.atan2(Math.sin(H) * cosLa, Math.sin(la) * Math.cos(de) - Math.sin(de) * cosLa * Math.cos(H));
 
     return radToDeg(P);
 }
@@ -530,21 +536,21 @@ export function positionAngleOfAxis(t: JulianDay): number {
     const e = degToRad(earth.meanObliquity(t));
 
     const Dr = degToRad(earth.longitudeNutation(t));
-    const O = degToRad(meanOrbitLongitude(t));
+    const O = degToRad(meanAscendingNodeLongitude(t));
 
     const V = O + Dr;
 
-    const sin_I = Math.sin(MEAN_EQUATOR_INCLINATION);
+    const sinI = Math.sin(MEAN_EQUATOR_INCLINATION);
 
-    const X = sin_I * Math.sin(V);
-    const Y = sin_I * Math.cos(V) * Math.cos(e) - Math.cos(MEAN_EQUATOR_INCLINATION) * Math.sin(e);
+    const X = sinI * Math.sin(V);
+    const Y = sinI * Math.cos(V) * Math.cos(e) - Math.cos(MEAN_EQUATOR_INCLINATION) * Math.sin(e);
 
     const ecl = position(t);
     const lo = degToRad(ecl.longitude);
     const la = degToRad(ecl.latitude);
 
     const W = normalizeRadians(lo - Dr - O);
-    const b = Math.asin(-Math.sin(W) * Math.cos(la) * sin_I - Math.sin(la) * Math.cos(MEAN_EQUATOR_INCLINATION));
+    const b = Math.asin(-Math.sin(W) * Math.cos(la) * sinI - Math.sin(la) * Math.cos(MEAN_EQUATOR_INCLINATION));
 
     const w = normalizeRadians(Math.atan2(X, Y));
     const P = Math.asin((Math.sqrt(X * X + Y * Y) * Math.cos(a - w)) / Math.cos(b));
@@ -560,21 +566,21 @@ export function positionAngleOfAxisApprox(t: JulianDay): number {
     const e = degToRad(earth.meanObliquityApprox(t));
 
     const Dr = degToRad(earth.longitudeNutationApprox(t));
-    const O = degToRad(meanOrbitLongitudeApprox(t));
+    const O = degToRad(meanAscendingNodeLongitudeApprox(t));
 
     const V = O + Dr;
 
-    const sin_I = Math.sin(MEAN_EQUATOR_INCLINATION);
+    const sinI = Math.sin(MEAN_EQUATOR_INCLINATION);
 
-    const X = sin_I * Math.sin(V);
-    const Y = sin_I * Math.cos(V) * Math.cos(e) - Math.cos(MEAN_EQUATOR_INCLINATION) * Math.sin(e);
+    const X = sinI * Math.sin(V);
+    const Y = sinI * Math.cos(V) * Math.cos(e) - Math.cos(MEAN_EQUATOR_INCLINATION) * Math.sin(e);
 
     const ecl = positionApprox(t);
     const lo = degToRad(ecl.longitude);
     const la = degToRad(ecl.latitude);
 
     const W = normalizeRadians(lo - Dr - O);
-    const b = Math.asin(-Math.sin(W) * Math.cos(la) * sin_I - Math.sin(la) * Math.cos(MEAN_EQUATOR_INCLINATION));
+    const b = Math.asin(-Math.sin(W) * Math.cos(la) * sinI - Math.sin(la) * Math.cos(MEAN_EQUATOR_INCLINATION));
 
     const w = normalizeRadians(Math.atan2(X, Y));
     const P = Math.asin((Math.sqrt(X * X + Y * Y) * Math.cos(a - w)) / Math.cos(b));

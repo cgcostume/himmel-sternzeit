@@ -1,3 +1,4 @@
+// See ../GLOSSARY.md for Julian Day, Julian century, standard equinox, and epoch.
 import { dayFraction, frac, toInt } from "./math.js";
 
 /** A calendar date/time used for astronomical calculations. */
@@ -14,6 +15,8 @@ export interface AstronomicalTime {
 }
 
 export type JulianDay = number;
+/** Julian centuries since a reference epoch (commonly `T`). Not a {@link JulianDay}; see {@link julianCenturiesSinceStandardEquinox}. */
+export type JulianCenturies = number;
 
 /** 2000 January 1, 12:00 TT, the J2000.0 epoch. */
 export const J2000: JulianDay = 2451545.0;
@@ -96,15 +99,7 @@ export function fromJulianDay(jd: JulianDay, utcOffsetSeconds = 0): Astronomical
     const m = frac(h) * 60;
     const s = frac(m) * 60.0001;
 
-    return {
-        year,
-        month,
-        day,
-        hour: toInt(h),
-        minute: toInt(m),
-        second: toInt(s),
-        utcOffsetSeconds,
-    };
+    return { year, month, day, hour: toInt(h), minute: toInt(m), second: toInt(s), utcOffsetSeconds };
 }
 
 /** `time` converted to UT (utcOffsetSeconds = 0). */
@@ -118,6 +113,6 @@ export function julianDaysSinceStandardEquinox(jd: JulianDay): number {
 }
 
 /** Julian centuries since the standard equinox (J2000.0). Commonly denoted `T`. */
-export function julianCenturiesSinceStandardEquinox(jd: JulianDay): number {
+export function julianCenturiesSinceStandardEquinox(jd: JulianDay): JulianCenturies {
     return julianDaysSinceStandardEquinox(jd) / 36525;
 }

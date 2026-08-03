@@ -11,29 +11,26 @@ export { eclipticalToEquatorial, equatorialToHorizontal } from "./coords.js";
 export type { AstronomicalTime, JulianDay } from "./time.js";
 export { J2000, J2050, B1900, B1950, STANDARD_EQUINOX } from "./time.js"; // reference epochs
 export {
+    fromJulianDay,
     julianDay,
     julianDay0UT,
     julianDayUT,
-    fromJulianDay,
-    modifiedJulianDay,
-    toUT,
     julianDaysSinceStandardEquinox,
     julianCenturiesSinceStandardEquinox,
+    modifiedJulianDay,
+    toUT,
 } from "./time.js"; // Julian Day conversions
 
 // Sidereal time.
-
 export { meanSiderealTime as siderealTime } from "./siderealTime.js";
 
 // Earth.
-export {
-    EARTH_MEAN_RADIUS_KM,
-    EARTH_ATMOSPHERE_THICKNESS_KM,
-    EARTH_ATMOSPHERE_THICKNESS_NON_UNIFORM_KM,
-    APPARENT_MAGNITUDE_LIMIT,
-    atmosphericRefraction,
-} from "./earth.js";
 export const earth = {
+    MEAN_RADIUS_KM: earthImpl.MEAN_RADIUS_KM,
+    ATMOSPHERE_THICKNESS_KM: earthImpl.ATMOSPHERE_THICKNESS_KM,
+    ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: earthImpl.ATMOSPHERE_THICKNESS_NON_UNIFORM_KM,
+    APPARENT_MAGNITUDE_LIMIT: earthImpl.APPARENT_MAGNITUDE_LIMIT,
+    atmosphericRefraction: earthImpl.atmosphericRefraction,
     orbitEccentricity: earthImpl.orbitEccentricity,
     apparentAngularSunDiameter: earthImpl.apparentAngularSunDiameter,
     apparentAngularMoonDiameter: earthImpl.apparentAngularMoonDiameter,
@@ -45,8 +42,8 @@ export const earth = {
 };
 
 // Sun.
-export { SUN_MEAN_RADIUS_KM } from "./sun.js";
 export const sun = {
+    MEAN_RADIUS_KM: sunImpl.MEAN_RADIUS_KM,
     meanAnomaly: sunImpl.meanAnomaly,
     meanLongitude: sunImpl.meanLongitude,
     center: sunImpl.center,
@@ -59,13 +56,13 @@ export const sun = {
 
 // Moon.
 export type { MoonLibration } from "./moon.js";
-export { MOON_MEAN_RADIUS_KM } from "./moon.js";
 export const moon = {
+    MEAN_RADIUS_KM: moonImpl.MEAN_RADIUS_KM,
     meanLongitude: moonImpl.meanLongitude,
     meanElongation: moonImpl.meanElongation,
     meanAnomaly: moonImpl.meanAnomaly,
-    meanLatitude: moonImpl.meanLatitude,
-    meanOrbitLongitude: moonImpl.meanOrbitLongitude,
+    meanArgumentOfLatitude: moonImpl.meanArgumentOfLatitude,
+    meanAscendingNodeLongitude: moonImpl.meanAscendingNodeLongitude,
     position: moonImpl.position,
     apparentPosition: moonImpl.apparentPosition,
     horizontalPosition: moonImpl.horizontalPosition,

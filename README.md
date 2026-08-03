@@ -10,11 +10,17 @@ for atmosphere rendering). Modules are intentionally decoupled: consumers
 compute positions here and pass plain vectors/angles into the rendering
 packages themselves.
 
+New to terms like nutation, obliquity, or libration? See [GLOSSARY.md](./GLOSSARY.md).
+
 ## Status
 
-Early port in progress. Currently implemented: Julian Day conversions and
-mean sidereal time (`julianday.*`, `atime.*`, `siderealtime.*` from the
-original). Sun/moon/star position math follows next.
+Julian Day conversions, mean sidereal time, and Sun/Moon/Earth position math
+(coordinates, orbital elements, nutation, apparent position, distance,
+libration, parallactic angle) are implemented, each with a precise (Meeus)
+and a cheaper approximate (Jensen et al.) variant; see `.` vs. `./approx` in
+`package.json#exports`. The bright star catalog is checked in
+(`src/data/`), but apparent star position (accounting for proper motion and
+precession) isn't implemented yet.
 
 ## Development
 

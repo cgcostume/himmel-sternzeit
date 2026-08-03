@@ -25,15 +25,14 @@ export {
 export { meanSiderealTimeApprox as siderealTime } from "./siderealTime.js";
 
 // Earth. Same shape as the precise `earth` namespace in `index.ts`, minus `viewDistanceWithinAtmosphere`'s
-// refraction flag.
-export {
-    EARTH_MEAN_RADIUS_KM,
-    EARTH_ATMOSPHERE_THICKNESS_KM,
-    EARTH_ATMOSPHERE_THICKNESS_NON_UNIFORM_KM,
-    APPARENT_MAGNITUDE_LIMIT,
-    atmosphericRefraction,
-} from "./earth.js";
+// refraction flag. MEAN_RADIUS_KM/ATMOSPHERE_THICKNESS_KM/ATMOSPHERE_THICKNESS_NON_UNIFORM_KM/
+// APPARENT_MAGNITUDE_LIMIT/atmosphericRefraction have no approximate variant, same values either way.
 export const earth = {
+    MEAN_RADIUS_KM: earthImpl.MEAN_RADIUS_KM,
+    ATMOSPHERE_THICKNESS_KM: earthImpl.ATMOSPHERE_THICKNESS_KM,
+    ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: earthImpl.ATMOSPHERE_THICKNESS_NON_UNIFORM_KM,
+    APPARENT_MAGNITUDE_LIMIT: earthImpl.APPARENT_MAGNITUDE_LIMIT,
+    atmosphericRefraction: earthImpl.atmosphericRefraction,
     orbitEccentricity: earthImpl.orbitEccentricityApprox,
     apparentAngularSunDiameter: earthImpl.apparentAngularSunDiameterApprox,
     apparentAngularMoonDiameter: earthImpl.apparentAngularMoonDiameterApprox,
@@ -46,8 +45,8 @@ export const earth = {
 
 // Sun. Same shape as the precise `sun` namespace in `index.ts`, minus `center`/`trueAnomaly`/`trueLongitude`
 // (no approximate variant of those exists).
-export { SUN_MEAN_RADIUS_KM } from "./sun.js";
 export const sun = {
+    MEAN_RADIUS_KM: sunImpl.MEAN_RADIUS_KM,
     meanAnomaly: sunImpl.meanAnomalyApprox,
     meanLongitude: sunImpl.meanLongitudeApprox,
     apparentPosition: sunImpl.apparentPositionApprox,
@@ -57,13 +56,13 @@ export const sun = {
 
 // Moon. Same shape as the precise `moon` namespace in `index.ts`.
 export type { MoonLibration } from "./moon.js";
-export { MOON_MEAN_RADIUS_KM } from "./moon.js";
 export const moon = {
+    MEAN_RADIUS_KM: moonImpl.MEAN_RADIUS_KM,
     meanLongitude: moonImpl.meanLongitudeApprox,
     meanElongation: moonImpl.meanElongationApprox,
     meanAnomaly: moonImpl.meanAnomalyApprox,
-    meanLatitude: moonImpl.meanLatitudeApprox,
-    meanOrbitLongitude: moonImpl.meanOrbitLongitudeApprox,
+    meanArgumentOfLatitude: moonImpl.meanArgumentOfLatitudeApprox,
+    meanAscendingNodeLongitude: moonImpl.meanAscendingNodeLongitudeApprox,
     position: moonImpl.positionApprox,
     apparentPosition: moonImpl.apparentPositionApprox,
     horizontalPosition: moonImpl.horizontalPositionApprox,

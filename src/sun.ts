@@ -1,3 +1,4 @@
+// See ../GLOSSARY.md for mean/true anomaly, mean/true longitude, equation of the center, and apparent position.
 import {
     type EquatorialCoords,
     eclipticalToEquatorial,
@@ -11,7 +12,7 @@ import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
 import { type AstronomicalTime, type JulianDay, julianCenturiesSinceStandardEquinox, julianDayUT } from "./time.js";
 
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html */
-export const SUN_MEAN_RADIUS_KM = 0.696e6;
+export const MEAN_RADIUS_KM = 0.696e6;
 
 /** Mean anomaly, in degrees, per Meeus' "Astronomical Algorithms" (45.3). */
 export function meanAnomaly(t: JulianDay): number {
@@ -67,7 +68,7 @@ export function trueLongitude(t: JulianDay): number {
 }
 
 export function apparentPosition(t: JulianDay): EquatorialCoords {
-    const O = degToRad(moon.meanOrbitLongitude(t));
+    const O = degToRad(moon.meanAscendingNodeLongitude(t));
     const e = degToRad(earth.trueObliquity(t) + 0.00256 * Math.cos(O));
     const l = degToRad(trueLongitude(t) - 0.00569 - 0.00478 * Math.sin(O));
 

@@ -1,3 +1,4 @@
+// See ../GLOSSARY.md for equatorial/ecliptic/horizontal coordinates, obliquity, and hour angle.
 import { degToRad, normalizeDegrees, radToDeg } from "./math.js";
 import type { JulianDay } from "./time.js";
 
