@@ -10,7 +10,7 @@ were precomputed for osgHimmel from each star's B-V color index via
 `Stars::sRgbColor()`: B-V → color temperature → Planckian locus in CIE xy →
 CIE XYZ tristimulus → sRGB.
 
-`brightstars.bin` is generated from the CSV — a flat little-endian
+`brightstars.bin` is generated from the CSV, a flat little-endian
 `Float32Array`, matching the original C++ `float` precision:
 
 ```sh

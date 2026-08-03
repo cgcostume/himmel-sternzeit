@@ -1,44 +1,47 @@
 {
-  "name": "@himmel/sternzeit",
-  "version": "0.1.0",
-  "description": "Sidereal time and astronomical position math (sun, moon, stars) for sky rendering — a TypeScript port of osgHimmel's astronomy core, with no rendering dependencies.",
-  "type": "module",
-  "license": "MIT",
-  "sideEffects": false,
-  "author": "Daniel Limberger <cgdaniel@outlook.com> (https://github.com/cgcostume)",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cgcostume/himmel-sternzeit.git"
-  },
-  "keywords": [
-    "astronomy",
-    "sidereal-time",
-    "julian-day",
-    "sun-position",
-    "moon-position",
-    "webgpu"
-  ],
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+    "name": "@himmel/sternzeit",
+    "version": "0.1.0",
+    "description": "Sidereal time and astronomical position math (sun, moon, stars) for sky rendering, a TypeScript port of osgHimmel's astronomy core, with no rendering dependencies.",
+    "type": "module",
+    "license": "MIT",
+    "sideEffects": false,
+    "author": "Daniel Limberger <cgdaniel@outlook.com> (https://github.com/cgcostume)",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/cgcostume/himmel-sternzeit.git"
+    },
+    "keywords": [
+        "astronomy",
+        "sidereal-time",
+        "julian-day",
+        "sun-position",
+        "moon-position",
+        "webgpu"
+    ],
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "rolldown -c rolldown.config.ts",
+        "typecheck": "tsc --noEmit",
+        "test": "playwright test",
+        "generate:catalog": "node scripts/csv-to-bin.mjs",
+        "format": "biome format --write .",
+        "lint": "biome check ."
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.5.6",
+        "@playwright/test": "^1.62.1",
+        "rolldown": "^1.2.2",
+        "rolldown-plugin-dts": "^0.28.0",
+        "typescript": "^7.0.2"
     }
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "rolldown -c rolldown.config.ts",
-    "typecheck": "tsc --noEmit",
-    "test": "playwright test",
-    "generate:catalog": "node scripts/csv-to-bin.mjs"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.62.1",
-    "rolldown": "^1.2.2",
-    "rolldown-plugin-dts": "^0.28.0",
-    "typescript": "^7.0.2"
-  }
 }

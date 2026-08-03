@@ -3,7 +3,7 @@
 Sidereal time and astronomical position math (sun, moon, stars) for sky
 rendering. A TypeScript port of the astronomy core of
 [osgHimmel](https://github.com/cgcostume/osghimmel), with no rendering or
-DOM dependencies — usable from Node, a worker, or any renderer.
+DOM dependencies, usable from Node, a worker, or any renderer.
 
 Part of the `@himmel/*` family (see [himmel-dunstkreis](https://github.com/cgcostume/himmel-dunstkreis)
 for atmosphere rendering). Modules are intentionally decoupled: consumers
