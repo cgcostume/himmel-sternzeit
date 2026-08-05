@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>@himmel/sternzeit dev inspector</title>
+<link rel="stylesheet" href="index.css" />
+<link rel="stylesheet" href="viz.css" />
+</head>
+<body>
+
+<h1>@himmel/<strong>sternzeit</strong> dev inspector</h1>
+<p class="note">
+    Local dev tool only, not part of the package build. Requires <code>pnpm build</code> to have run first
+    (loads <code>../dist/index.js</code> and <code>../dist/approx.js</code> directly), and must be served over
+    http, not opened as a <code>file://</code> URL (ES module imports are blocked there).
+</p>
+
+<div class="input-grid">
+    <label for="jd">Julian Day</label>
+    <input id="jd" type="number" step="0.00001157" />
+    <select id="jdStep">
+        <option value="365.25">± year</option>
+        <option value="30.436875">± month</option>
+        <option value="7">± week</option>
+        <option value="1">± day</option>
+        <option value="0.0416666666667">± hour</option>
+        <option value="0.0006944444444">± minute</option>
+        <option value="0.0000115740741" selected>± second</option>
+    </select>
+    <span class="input-grid-extra">
+        <code id="calendar"></code>
+        <button id="copyCalendar" type="button">copy</button>
+    </span>
+    <span class="input-grid-subrow">
+        <button id="now" type="button">now</button>
+        <label><input id="live" type="checkbox" /> live</label>
+    </span>
+
+    <label for="latitude">Latitude</label>
+    <input id="latitude" class="latlong" type="number" step="1" value="52.39206070410163" />
+    <select id="latitudeStep">
+        <option value="1" selected>± degree</option>
+        <option value="0.0166666666667">± minute</option>
+        <option value="0.0002777777778">± second</option>
+    </select>
+    <span class="input-grid-extra"><span id="latitudeDms" class="note"></span></span>
+
+    <label for="longitude">Longitude</label>
+    <input id="longitude" class="latlong" type="number" step="1" value="13.0925764790797" />
+    <select id="longitudeStep">
+        <option value="1" selected>± degree</option>
+        <option value="0.0166666666667">± minute</option>
+        <option value="0.0002777777778">± second</option>
+    </select>
+    <span class="input-grid-extra"><span id="longitudeDms" class="note"></span></span>
+    <span class="input-grid-subrow">
+        <button id="geolocate" type="button">use browser location</button>
+        <span id="location" class="note"></span>
+    </span>
+</div>
+<p class="note">
+    Also fixed: altitude = 45° (for <code>atmosphericRefraction</code>), view-direction y = 0.5
+    (for <code>viewDistanceWithinAtmosphere</code>).
+</p>
+
+<h2>schematic view</h2>
+<p class="note">
+    Not to scale: earth/sun/moon sizes and distances are chosen for visibility, not physical proportion. Driven by
+    the same Julian Day / latitude / longitude above. Drag to rotate. Hover a row in the tables below to highlight
+    what it corresponds to here; check a row (where available) to keep its annotation on persistently.
+</p>
+<div id="scene">
+    <svg id="stage"></svg>
+    <div id="tooltip" class="tooltip" hidden></div>
+    <div id="sunLabel" class="body-label"></div>
+    <div id="moonLabel" class="body-label"></div>
+</div>
+
+<button id="benchmark" type="button">run benchmark</button>
+<div id="tables"></div>
+
+<script src="../node_modules/zdog/dist/zdog.dist.js"></script>
+<script type="module" src="index.js"></script>
+<script type="module" src="viz.js"></script>
+</body>
+</html>

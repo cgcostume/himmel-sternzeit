@@ -1,0 +1,39 @@
+#scene {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-height: 80vh;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+    touch-action: none;
+}
+#stage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+#stage:active { cursor: grabbing; }
+.tooltip {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    max-width: calc(100% - 1.5rem);
+    pointer-events: none;
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.body-label {
+    position: absolute;
+    pointer-events: none;
+    font-size: 11px;
+    opacity: 0.7;
+    transform: translate(-50%, 4px);
+}
