@@ -32,8 +32,6 @@ export const earth = {
     APPARENT_MAGNITUDE_LIMIT: earthImpl.APPARENT_MAGNITUDE_LIMIT,
     atmosphericRefraction: earthImpl.atmosphericRefraction,
     orbitEccentricity: earthImpl.orbitEccentricity,
-    apparentAngularSunDiameter: earthImpl.apparentAngularSunDiameter,
-    apparentAngularMoonDiameter: earthImpl.apparentAngularMoonDiameter,
     longitudeNutation: earthImpl.longitudeNutation,
     obliquityNutation: earthImpl.obliquityNutation,
     meanObliquity: earthImpl.meanObliquity,
@@ -52,6 +50,7 @@ export const sun = {
     apparentPosition: sunImpl.apparentPosition,
     horizontalPosition: sunImpl.horizontalPosition,
     distance: sunImpl.distance,
+    apparentAngularDiameter: sunImpl.apparentAngularDiameter,
 };
 
 // Moon.
@@ -67,6 +66,7 @@ export const moon = {
     apparentPosition: moonImpl.apparentPosition,
     horizontalPosition: moonImpl.horizontalPosition,
     distance: moonImpl.distance,
+    apparentAngularDiameter: moonImpl.apparentAngularDiameter,
     opticalLibrations: moonImpl.opticalLibrations,
     parallacticAngle: moonImpl.parallacticAngle,
     positionAngleOfAxis: moonImpl.positionAngleOfAxis,

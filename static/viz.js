@@ -11,7 +11,9 @@ const DEG = Math.PI / 180;
 const EARTH_R = 80;
 const MOON_R = 11;
 const SUN_R = 32;
-const MOON_DIST = 135;
+// Narrower gap than a strict distance scale would give (moon:sun is really ~1:390): keeps the sun where
+// it was and brings the moon closer to it, still clearly nearer but not as separated as before.
+const MOON_DIST = 320;
 const SUN_DIST = 460;
 
 function v(x, y, z) {

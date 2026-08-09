@@ -57,10 +57,21 @@
         <button id="geolocate" type="button">use browser location</button>
         <span id="location" class="note"></span>
     </span>
+
+    <label for="altitude">Altitude</label>
+    <input id="altitude" class="latlong" type="number" step="1" value="45" />
+    <select id="altitudeStep">
+        <option value="1" selected>± degree</option>
+        <option value="0.0166666666667">± minute</option>
+        <option value="0.0002777777778">± second</option>
+    </select>
+    <span class="input-grid-extra"><span id="altitudeDms" class="note"></span></span>
 </div>
 <p class="note">
-    Also fixed: altitude = 45° (for <code>atmosphericRefraction</code>), view-direction y = 0.5
-    (for <code>viewDistanceWithinAtmosphere</code>).
+    <code>altitude</code> above: a sky altitude angle above the local horizon (0-90°), not an observer height
+    above ground, this library has no elevation parameter. Feeds <code>atmosphericRefraction</code> directly and
+    <code>viewDistanceWithinAtmosphere</code> as <code>y = sin(altitude)</code>, the vertical component of a
+    view direction vector, since that's the form a renderer's ray would already be in.
 </p>
 
 <h2>schematic view</h2>

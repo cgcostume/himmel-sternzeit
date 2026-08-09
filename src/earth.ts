@@ -1,4 +1,4 @@
-// See ../GLOSSARY.md for obliquity, nutation, orbital eccentricity, atmospheric refraction, and apparent angular diameter.
+// See ../GLOSSARY.md for obliquity, nutation, orbital eccentricity, and atmospheric refraction.
 import { arcsecondsToDegrees, degToRad, radToDeg } from "./math.js";
 import * as moon from "./moon.js";
 import * as sun from "./sun.js";
@@ -28,26 +28,6 @@ export function orbitEccentricity(t: JulianDay): number {
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html */
 export function orbitEccentricityApprox(): number {
     return 0.01671022;
-}
-
-/** In radians. */
-export function apparentAngularSunDiameter(t: JulianDay): number {
-    return 2 * Math.atan(sun.MEAN_RADIUS_KM / sun.distance(t));
-}
-
-/** In radians. */
-export function apparentAngularSunDiameterApprox(t: JulianDay): number {
-    return 2 * Math.atan(sun.MEAN_RADIUS_KM / sun.distanceApprox(t));
-}
-
-/** In radians. */
-export function apparentAngularMoonDiameter(t: JulianDay): number {
-    return 2 * Math.atan(moon.MEAN_RADIUS_KM / moon.distance(t));
-}
-
-/** In radians. */
-export function apparentAngularMoonDiameterApprox(t: JulianDay): number {
-    return 2 * Math.atan(moon.MEAN_RADIUS_KM / moon.distanceApprox(t));
 }
 
 /** Nutation in longitude (Δψ), in degrees, per Meeus' "Astronomical Algorithms" (21.A). */

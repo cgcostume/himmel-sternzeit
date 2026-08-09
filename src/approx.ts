@@ -34,8 +34,6 @@ export const earth = {
     APPARENT_MAGNITUDE_LIMIT: earthImpl.APPARENT_MAGNITUDE_LIMIT,
     atmosphericRefraction: earthImpl.atmosphericRefraction,
     orbitEccentricity: earthImpl.orbitEccentricityApprox,
-    apparentAngularSunDiameter: earthImpl.apparentAngularSunDiameterApprox,
-    apparentAngularMoonDiameter: earthImpl.apparentAngularMoonDiameterApprox,
     longitudeNutation: earthImpl.longitudeNutationApprox,
     obliquityNutation: earthImpl.obliquityNutationApprox,
     meanObliquity: earthImpl.meanObliquityApprox,
@@ -52,6 +50,7 @@ export const sun = {
     apparentPosition: sunImpl.apparentPositionApprox,
     horizontalPosition: sunImpl.horizontalPositionApprox,
     distance: sunImpl.distanceApprox,
+    apparentAngularDiameter: sunImpl.apparentAngularDiameterApprox,
 };
 
 // Moon. Same shape as the precise `moon` namespace in `index.ts`.
@@ -67,6 +66,7 @@ export const moon = {
     apparentPosition: moonImpl.apparentPositionApprox,
     horizontalPosition: moonImpl.horizontalPositionApprox,
     distance: moonImpl.distanceApprox,
+    apparentAngularDiameter: moonImpl.apparentAngularDiameterApprox,
     opticalLibrations: moonImpl.opticalLibrationsApprox,
     parallacticAngle: moonImpl.parallacticAngleApprox,
     positionAngleOfAxis: moonImpl.positionAngleOfAxisApprox,

@@ -127,3 +127,13 @@ export function distanceApprox(t: JulianDay): number {
 
     return auToKm(R);
 }
+
+/** The Sun's apparent angular width as seen from Earth, in radians. */
+export function apparentAngularDiameter(t: JulianDay): number {
+    return 2 * Math.atan(MEAN_RADIUS_KM / distance(t));
+}
+
+/** The Sun's apparent angular width as seen from Earth, in radians. */
+export function apparentAngularDiameterApprox(t: JulianDay): number {
+    return 2 * Math.atan(MEAN_RADIUS_KM / distanceApprox(t));
+}

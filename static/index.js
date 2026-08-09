@@ -1,9 +1,6 @@
 import * as approx from "../dist/approx.js";
 import * as precise from "../dist/index.js";
 
-const FIXED_ALTITUDE_DEG = 45;
-const FIXED_VIEW_Y = 0.5;
-
 // Unit of each export's return value (or of an object return's fields, which all share one unit here).
 // Anything not listed defaults to degrees, the overwhelming majority.
 const UNITS = {
@@ -64,8 +61,9 @@ function describe(name, field) {
 // How to call an export that isn't just fn(julianDay). Anything not listed here falls back to
 // fn.length === 0 ? fn() : fn(jd).
 const CALL_OVERRIDES = {
-    atmosphericRefraction: (fn) => fn(FIXED_ALTITUDE_DEG),
-    viewDistanceWithinAtmosphere: (fn) => fn(FIXED_VIEW_Y),
+    atmosphericRefraction: (fn) => fn(Number(altitudeInput.value)),
+    // y = sin(altitude), the vertical component of a unit view direction vector; see the #altitude note.
+    viewDistanceWithinAtmosphere: (fn) => fn(Math.sin(Number(altitudeInput.value) * DEG_TO_RAD)),
     // jd is already an absolute instant; fromJulianDay(jd) (offset 0) round-trips it as a UT AstronomicalTime,
     // which is what julianDayUT() inside horizontalPosition/parallacticAngle expects. A nonzero offset here
     // would double-shift the instant, since jd carries no timezone to begin with.
@@ -119,6 +117,7 @@ function formatDegreesLike(rawValue, rawSuffix, degreesValue) {
 }
 
 const RAD_TO_DEG = 180 / Math.PI;
+const DEG_TO_RAD = Math.PI / 180;
 
 function formatNumber(n, unit) {
     if (!Number.isFinite(n)) return String(n);
@@ -286,6 +285,7 @@ function render() {
     // table columns) just needs trimming for a plain label.
     latitudeDmsSpan.textContent = formatDMS(Number(latitudeInput.value)).trim();
     longitudeDmsSpan.textContent = formatDMS(Number(longitudeInput.value)).trim();
+    altitudeDmsSpan.textContent = formatDMS(Number(altitudeInput.value)).trim();
 }
 
 const jdInput = document.getElementById("jd");
@@ -304,6 +304,9 @@ const longitudeStepSelect = document.getElementById("longitudeStep");
 const longitudeDmsSpan = document.getElementById("longitudeDms");
 const geolocateButton = document.getElementById("geolocate");
 const locationSpan = document.getElementById("location");
+const altitudeInput = document.getElementById("altitude");
+const altitudeStepSelect = document.getElementById("altitudeStep");
+const altitudeDmsSpan = document.getElementById("altitudeDms");
 
 benchmarkButton.addEventListener("click", runBenchmarks);
 
@@ -375,6 +378,7 @@ const jdMinStep = wireStepping(jdInput, jdStepSelect);
 // they don't need latitude/longitudeStepSelect's minStep the way setToNow() below still needs jdMinStep.
 wireStepping(latitudeInput, latitudeStepSelect, LATLONG_DECIMALS);
 wireStepping(longitudeInput, longitudeStepSelect, LATLONG_DECIMALS);
+wireStepping(altitudeInput, altitudeStepSelect, LATLONG_DECIMALS);
 
 // Delegated on the stable container rather than per-row, so it survives tablesDiv.innerHTML being
 // rebuilt on every render() without needing to re-bind. viz.js listens for this independently.
@@ -491,10 +495,12 @@ jdInput.addEventListener("input", () => {
 });
 latitudeInput.addEventListener("input", render);
 longitudeInput.addEventListener("input", render);
+altitudeInput.addEventListener("input", render);
 
 // Normalizes the HTML defaults' raw precision to the same fixed digit count everything else uses.
 latitudeInput.value = capDecimals(Number(latitudeInput.value), LATLONG_DECIMALS);
 longitudeInput.value = capDecimals(Number(longitudeInput.value), LATLONG_DECIMALS);
+altitudeInput.value = capDecimals(Number(altitudeInput.value), LATLONG_DECIMALS);
 
 setToNow();
 render();
