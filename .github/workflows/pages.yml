@@ -35,7 +35,7 @@ jobs:
           cp static/*.html static/*.css static/*.js _site/
           cp dist/*.js _site/dist/
           cp node_modules/zdog/dist/zdog.dist.js _site/node_modules/zdog/dist/
-          sed -i 's#\.\./dist/#./dist/#g; s#\.\./node_modules/#./node_modules/#g' _site/index.html
+          sed -i 's#\.\./dist/#./dist/#g; s#\.\./node_modules/#./node_modules/#g' _site/index.html _site/index.js _site/viz.js
 
       - uses: actions/upload-pages-artifact@v5
         with:
