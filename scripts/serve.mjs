@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+
 // Dev script: serves the repo root over http so static/index.html can load ../dist/*.js as ES modules
 // (blocked under file://) and static/index.css / static/index.js as plain relative paths. No dependency
 // on a static-file-server package, this is a small enough job for node:http alone. Run via `pnpm start`.
 
-import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
+import { createServer } from "node:http";
 import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 

@@ -424,8 +424,8 @@ function frame() {
     // Moon face marker geometry, see comment at moonFaceLine's declaration.
     const earthward = vNormalize(vScale(moonPos, -1));
     const ref = Math.abs(earthward.y) < 0.9 ? v(0, 1, 0) : v(1, 0, 0);
-    let u = vNormalize(vCross(ref, earthward));
-    let vAxis = vCross(earthward, u);
+    const u = vNormalize(vCross(ref, earthward));
+    const vAxis = vCross(earthward, u);
     const paa = positionAngleOfAxis * DEG;
     const cosPaa = Math.cos(paa);
     const sinPaa = Math.sin(paa);

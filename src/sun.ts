@@ -6,30 +6,16 @@ import {
     type HorizontalCoords,
 } from "./coords.js";
 import * as earth from "./earth.js";
-import { auToKm, DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
-import * as moon from "./moon.js";
+import { meanAnomaly, meanAnomalyApprox, meanAscendingNodeLongitude } from "./elements.js";
+import { ASTRONOMICAL_UNIT_KM, DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
 import { type AstronomicalTime, type JulianDay, julianCenturiesSinceStandardEquinox, julianDayUT } from "./time.js";
 
 /** http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html */
 export const MEAN_RADIUS_KM = 0.696e6;
 
-/** Mean anomaly, in degrees, per Meeus' "Astronomical Algorithms" (45.3). */
-export function meanAnomaly(t: JulianDay): number {
-    const T = julianCenturiesSinceStandardEquinox(t);
-
-    const M = 357.5291092 + T * (35999.0502909 + T * (-0.0001536 + T * (1.0 / 24490000.0)));
-
-    return normalizeDegrees(M);
-}
-
-/** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
-export function meanAnomalyApprox(t: JulianDay): number {
-    const T = julianCenturiesSinceStandardEquinox(t);
-    const M = (6.24 + 628.302 * T) * RAD_TO_DEG;
-
-    return normalizeDegrees(M);
-}
+// Mean anomaly (see elements.ts for why it lives there, not here).
+export { meanAnomaly, meanAnomalyApprox };
 
 export function meanLongitude(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
@@ -68,7 +54,7 @@ export function trueLongitude(t: JulianDay): number {
 }
 
 export function apparentPosition(t: JulianDay): EquatorialCoords {
-    const O = moon.meanAscendingNodeLongitude(t) * DEG_TO_RAD;
+    const O = meanAscendingNodeLongitude(t) * DEG_TO_RAD;
     const e = (earth.trueObliquity(t) + 0.00256 * Math.cos(O)) * DEG_TO_RAD;
     const l = (trueLongitude(t) - 0.00569 - 0.00478 * Math.sin(O)) * DEG_TO_RAD;
 
@@ -114,7 +100,7 @@ export function distance(t: JulianDay): number {
     const e = earth.orbitEccentricity(t);
     const R = (1.000001018 * (1.0 - e * e)) / (1.0 + e * Math.cos(trueAnomaly(t) * DEG_TO_RAD));
 
-    return auToKm(R);
+    return R * ASTRONOMICAL_UNIT_KM;
 }
 
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
@@ -124,7 +110,7 @@ export function distanceApprox(t: JulianDay): number {
 
     const R = 1.00014 - (0.016708 - 0.000042 * T) * Math.cos(M) - 0.000141 * Math.cos(2 * M);
 
-    return auToKm(R);
+    return R * ASTRONOMICAL_UNIT_KM;
 }
 
 /** The Sun's apparent angular width as seen from Earth, in radians. */

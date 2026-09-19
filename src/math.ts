@@ -53,9 +53,5 @@ export function positionAngle(longitude1: number, latitude1: number, longitude2:
     return normalizeDegrees(Math.atan2(y, x) * RAD_TO_DEG);
 }
 
-/** Mean distance from Earth to Sun, in kilometers, used to convert between AU and km. */
+/** Mean distance from Earth to Sun, in kilometers: multiply an AU value by this to convert to km. */
 export const ASTRONOMICAL_UNIT_KM = 149598000;
-
-export function auToKm(au: number): number {
-    return au * ASTRONOMICAL_UNIT_KM;
-}

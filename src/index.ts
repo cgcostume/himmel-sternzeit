@@ -4,6 +4,16 @@ import * as moonImpl from "./moon.js";
 import * as sunImpl from "./sun.js";
 import * as eclipseImpl from "./eclipse.js";
 
+// Math auxiliaries, generic enough to be useful to any consumer, not just internally.
+export {
+    angularSeparation,
+    ASTRONOMICAL_UNIT_KM,
+    DEG_TO_RAD,
+    normalizeDegrees,
+    positionAngle,
+    RAD_TO_DEG,
+} from "./math.js";
+
 // Coordinate systems.
 export type { EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
 export { eclipticalToEquatorial, equatorialToHorizontal } from "./coords.js";

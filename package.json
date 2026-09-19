@@ -36,6 +36,7 @@
     ],
     "scripts": {
         "build": "rolldown -c rolldown.config.ts",
+        "clean": "rm -rf dist",
         "start": "node scripts/serve.mjs",
         "typecheck": "tsc --noEmit",
         "test": "playwright test",

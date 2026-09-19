@@ -54,5 +54,9 @@ The primary sources cited throughout the code (see individual function docstring
 pnpm install
 pnpm build       # rolldown -> dist/*.js + dist/*.d.ts
 pnpm typecheck   # tsc --noEmit
+pnpm lint        # biome check .
+pnpm format      # biome format --write .
 pnpm test        # playwright test
+pnpm start       # serves the dev inspector at localhost:4173/static/index.html (needs pnpm build first)
+pnpm clean       # rm -rf dist
 ```

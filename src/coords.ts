@@ -17,7 +17,7 @@ export interface EclipticalCoords {
 }
 
 export interface HorizontalCoords {
-    /** Azimuth (h), in degrees, measured westwards from the south. */
+    /** Azimuth (h), in degrees, compass convention: measured clockwise from north through east, 0-360. */
     azimuth: number;
     /** Altitude (A), in degrees. Positive above, negative below the horizon. */
     altitude: number;
@@ -42,7 +42,9 @@ export function eclipticalToEquatorial(ecl: EclipticalCoords, obliquity: number)
 /**
  * Equatorial to horizontal coordinates, per Meeus' "Astronomical Algorithms" (12.5, 12.6).
  * `observersLongitude` is positive east (standard geographic convention: LST = GST + east longitude),
- * verified against the 2024-04-08 total solar eclipse via eclipse.ts's solarEclipseState.
+ * verified against the 2024-04-08 total solar eclipse via eclipse.ts's solarEclipseState. Meeus' own
+ * azimuth formula is measured westward from south; 180 degrees is added below to return the compass
+ * convention (from north through east) instead, matching every other azimuth a renderer or map expects.
  */
 export function equatorialToHorizontal(
     equ: EquatorialCoords,
@@ -60,6 +62,8 @@ export function equatorialToHorizontal(
 
     return {
         altitude: Math.asin(sinLat * Math.sin(declination) + cosLat * Math.cos(declination) * cosH) * RAD_TO_DEG,
-        azimuth: Math.atan2(Math.sin(H), cosH * sinLat - Math.tan(declination) * cosLat) * RAD_TO_DEG,
+        azimuth: normalizeDegrees(
+            Math.atan2(Math.sin(H), cosH * sinLat - Math.tan(declination) * cosLat) * RAD_TO_DEG + 180,
+        ),
     };
 }

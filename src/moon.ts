@@ -7,9 +7,14 @@ import {
     type HorizontalCoords,
 } from "./coords.js";
 import * as earth from "./earth.js";
+import {
+    meanAscendingNodeLongitude,
+    meanAscendingNodeLongitudeApprox,
+    meanAnomaly as sunMeanAnomaly,
+    meanAnomalyApprox as sunMeanAnomalyApprox,
+} from "./elements.js";
 import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
-import * as sun from "./sun.js";
 import {
     type AstronomicalTime,
     type JulianCenturies,
@@ -92,20 +97,8 @@ export function meanArgumentOfLatitudeApprox(t: JulianDay): number {
     return normalizeDegrees(F);
 }
 
-export function meanAscendingNodeLongitude(t: JulianDay): number {
-    const T = julianCenturiesSinceStandardEquinox(t);
-
-    const O = 125.04452 + T * (-1934.136261 + T * (0.0020708 + T * (1.0 / 450000.0)));
-
-    return normalizeDegrees(O);
-}
-
-export function meanAscendingNodeLongitudeApprox(t: JulianDay): number {
-    const T = julianCenturiesSinceStandardEquinox(t);
-    const O = 125.04 + T * -1934.136;
-
-    return normalizeDegrees(O);
-}
+// Mean ascending node longitude (see elements.ts for why it lives there, not here).
+export { meanAscendingNodeLongitude, meanAscendingNodeLongitudeApprox };
 
 /**
  * Correction factor for the eccentricity of the Earth's orbit around the Sun, used in the periodic terms
@@ -117,7 +110,7 @@ function eccentricityCorrection(T: JulianCenturies): number {
 
 /** Geocentric ecliptical position, per Meeus' "Astronomical Algorithms" (45.A, 45.B). */
 export function position(t: JulianDay): EclipticalCoords {
-    const sM = sun.meanAnomaly(t) * DEG_TO_RAD;
+    const sM = sunMeanAnomaly(t) * DEG_TO_RAD;
 
     const mL = meanLongitude(t) * DEG_TO_RAD;
     const mM = meanAnomaly(t) * DEG_TO_RAD;
@@ -276,7 +269,7 @@ export function position(t: JulianDay): EclipticalCoords {
 
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
 export function positionApprox(t: JulianDay): EclipticalCoords {
-    const sM = sun.meanAnomalyApprox(t) * DEG_TO_RAD;
+    const sM = sunMeanAnomalyApprox(t) * DEG_TO_RAD;
 
     const mL = meanLongitudeApprox(t) * DEG_TO_RAD;
     const mM = meanAnomalyApprox(t) * DEG_TO_RAD;
@@ -403,7 +396,7 @@ export function horizontalPositionApprox(
 
 /** Distance from the center of the Moon to the center of the Earth, in kilometers, per Meeus' "Astronomical Algorithms" (45.A). */
 export function distance(t: JulianDay): number {
-    const sM = sun.meanAnomaly(t) * DEG_TO_RAD;
+    const sM = sunMeanAnomaly(t) * DEG_TO_RAD;
 
     const mM = meanAnomaly(t) * DEG_TO_RAD;
     const mD = meanElongation(t) * DEG_TO_RAD;
@@ -467,7 +460,7 @@ export function distance(t: JulianDay): number {
 
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
 export function distanceApprox(t: JulianDay): number {
-    const sM = sun.meanAnomalyApprox(t) * DEG_TO_RAD;
+    const sM = sunMeanAnomalyApprox(t) * DEG_TO_RAD;
 
     const mM = meanAnomalyApprox(t) * DEG_TO_RAD;
     const mD = meanElongationApprox(t) * DEG_TO_RAD;
