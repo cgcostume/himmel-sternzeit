@@ -407,16 +407,16 @@ function frame() {
     // in, i.e. dot density increases with zoom, matching finer scale with finer dotting.
     const dotDash = `${0.1 / illustration.zoom},${4 / illustration.zoom}`;
     const lineDash = `${3 / illustration.zoom},${3 / illustration.zoom}`;
-    // Dash-dot: distinguishes the sun from the plain-dotted fixed-reference tier (atmosphereShell, the
-    // earth rings, etc.), since the sun's own disc is worth a visually distinct line style, not another
-    // dotted ring easily lost among the others.
-    const dashDot = `${1 / illustration.zoom},${1.5 / illustration.zoom},${0.1 / illustration.zoom},${1.5 / illustration.zoom}`;
-    for (const shape of [equatorRing, axisLine, trueEclipticAxis, meanEclipticAxis, orbitEllipse, trueObliquityArc, trueObliquityArcSouth, atmosphereShell, moonDisc]) {
+    // Larger dashes (no dots): distinguishes the sun's orbit from the plain-dotted fixed-reference tier
+    // (atmosphereShell, the earth rings, etc.), since it's worth a visually distinct line style, not
+    // another dotted ring easily lost among the others.
+    const dashDot = `${4 / illustration.zoom},${8 / illustration.zoom}`;
+    for (const shape of [equatorRing, axisLine, trueEclipticAxis, meanEclipticAxis, trueObliquityArc, trueObliquityArcSouth, atmosphereShell, moonDisc, sunDisc]) {
         shape.svgElement?.setAttribute("stroke-dasharray", dotDash);
         shape.svgElement?.setAttribute("stroke-linecap", "round");
     }
-    sunDisc.svgElement?.setAttribute("stroke-dasharray", dashDot);
-    sunDisc.svgElement?.setAttribute("stroke-linecap", "round");
+    orbitEllipse.svgElement?.setAttribute("stroke-dasharray", dashDot);
+    orbitEllipse.svgElement?.setAttribute("stroke-linecap", "round");
     latitudeRing.svgElement?.setAttribute("stroke-dasharray", lineDash);
     meridianRing.svgElement?.setAttribute("stroke-dasharray", lineDash);
 

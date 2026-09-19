@@ -1,0 +1,52 @@
+name: Deploy dev inspector to Pages
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/dist _site/node_modules/zdog/dist
+          cp static/*.html static/*.css static/*.js _site/
+          cp dist/*.js _site/dist/
+          cp node_modules/zdog/dist/zdog.dist.js _site/node_modules/zdog/dist/
+          sed -i 's#\.\./dist/#./dist/#g; s#\.\./node_modules/#./node_modules/#g' _site/index.html
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
