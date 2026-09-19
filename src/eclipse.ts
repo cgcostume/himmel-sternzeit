@@ -66,20 +66,10 @@ function classifySolarEclipse(
  */
 export function solarEclipseState(time: AstronomicalTime, latitude: number, longitude: number): SolarEclipseState {
     const t = julianDayUT(time);
-    const sunHorizontal = sun.horizontalPosition(time, latitude, longitude);
-    const moonHorizontal = moon.horizontalPosition(time, latitude, longitude);
-    const separation = angularSeparation(
-        sunHorizontal.azimuth,
-        sunHorizontal.altitude,
-        moonHorizontal.azimuth,
-        moonHorizontal.altitude,
-    );
-    const direction = positionAngle(
-        sunHorizontal.azimuth,
-        sunHorizontal.altitude,
-        moonHorizontal.azimuth,
-        moonHorizontal.altitude,
-    );
+    const sh = sun.horizontalPosition(time, latitude, longitude);
+    const mh = moon.horizontalPosition(time, latitude, longitude);
+    const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
+    const direction = positionAngle(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
 
     return classifySolarEclipse(
         separation,
@@ -95,20 +85,10 @@ export function solarEclipseStateApprox(
     longitude: number,
 ): SolarEclipseState {
     const t = julianDayUT(time);
-    const sunHorizontal = sun.horizontalPositionApprox(time, latitude, longitude);
-    const moonHorizontal = moon.horizontalPositionApprox(time, latitude, longitude);
-    const separation = angularSeparation(
-        sunHorizontal.azimuth,
-        sunHorizontal.altitude,
-        moonHorizontal.azimuth,
-        moonHorizontal.altitude,
-    );
-    const direction = positionAngle(
-        sunHorizontal.azimuth,
-        sunHorizontal.altitude,
-        moonHorizontal.azimuth,
-        moonHorizontal.altitude,
-    );
+    const sh = sun.horizontalPositionApprox(time, latitude, longitude);
+    const mh = moon.horizontalPositionApprox(time, latitude, longitude);
+    const separation = angularSeparation(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
+    const direction = positionAngle(sh.azimuth, sh.altitude, mh.azimuth, mh.altitude);
 
     return classifySolarEclipse(
         separation,
