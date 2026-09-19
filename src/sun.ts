@@ -1,5 +1,6 @@
 // See ../GLOSSARY.md for mean/true anomaly, mean/true longitude, equation of the center, and apparent position.
 import {
+    applyParallax,
     type EquatorialCoords,
     eclipticalToEquatorial,
     equatorialToHorizontal,
@@ -77,11 +78,42 @@ export function apparentPositionApprox(t: JulianDay): EquatorialCoords {
     return eclipticalToEquatorial({ longitude, latitude: 0 }, earth.trueObliquityApprox(t));
 }
 
-export function horizontalPosition(time: AstronomicalTime, latitude: number, longitude: number): HorizontalCoords {
+/** Equatorial horizontal parallax (π), in degrees, per Meeus' "Astronomical Algorithms" (40.6). Tiny (~8.8")
+ *  compared to the Moon's, but applying it keeps sun/moon topocentric positions on the same footing. */
+export function equatorialHorizontalParallax(t: JulianDay): number {
+    return Math.asin(earth.MEAN_RADIUS_KM / distance(t)) * RAD_TO_DEG;
+}
+
+export function equatorialHorizontalParallaxApprox(t: JulianDay): number {
+    return Math.asin(earth.MEAN_RADIUS_KM / distanceApprox(t)) * RAD_TO_DEG;
+}
+
+/** The Sun's topocentric equatorial position: apparentPosition corrected for an observer's parallax. See
+ *  moon.ts's topocentricPosition for the same shape; the Sun's shift is only ~8.8" but nonzero. Feeds
+ *  horizontalPosition below, so that comparing sun/moon horizontal positions (e.g. for eclipses) compares
+ *  positions from the same observer-centered frame instead of mixing a geocentric Sun with a topocentric Moon. */
+export function topocentricPosition(time: AstronomicalTime, latitude: number, longitude: number): EquatorialCoords {
     const t = julianDayUT(time);
     const s = meanSiderealTime(time);
 
-    return equatorialToHorizontal(apparentPosition(t), s, latitude, longitude);
+    return applyParallax(apparentPosition(t), equatorialHorizontalParallax(t), s, latitude, longitude);
+}
+
+export function topocentricPositionApprox(
+    time: AstronomicalTime,
+    latitude: number,
+    longitude: number,
+): EquatorialCoords {
+    const t = julianDayUT(time);
+    const s = meanSiderealTimeApprox(time);
+
+    return applyParallax(apparentPositionApprox(t), equatorialHorizontalParallaxApprox(t), s, latitude, longitude);
+}
+
+export function horizontalPosition(time: AstronomicalTime, latitude: number, longitude: number): HorizontalCoords {
+    const s = meanSiderealTime(time);
+
+    return equatorialToHorizontal(topocentricPosition(time, latitude, longitude), s, latitude, longitude);
 }
 
 export function horizontalPositionApprox(
@@ -89,10 +121,9 @@ export function horizontalPositionApprox(
     latitude: number,
     longitude: number,
 ): HorizontalCoords {
-    const t = julianDayUT(time);
     const s = meanSiderealTimeApprox(time);
 
-    return equatorialToHorizontal(apparentPositionApprox(t), s, latitude, longitude);
+    return equatorialToHorizontal(topocentricPositionApprox(time, latitude, longitude), s, latitude, longitude);
 }
 
 /** Distance from the center of the Sun to the center of the Earth, in kilometers (AA.24.5). */

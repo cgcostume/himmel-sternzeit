@@ -59,6 +59,8 @@ export const sun = {
     trueAnomaly: sunImpl.trueAnomaly,
     trueLongitude: sunImpl.trueLongitude,
     apparentPosition: sunImpl.apparentPosition,
+    equatorialHorizontalParallax: sunImpl.equatorialHorizontalParallax,
+    topocentricPosition: sunImpl.topocentricPosition,
     horizontalPosition: sunImpl.horizontalPosition,
     distance: sunImpl.distance,
     apparentAngularDiameter: sunImpl.apparentAngularDiameter,

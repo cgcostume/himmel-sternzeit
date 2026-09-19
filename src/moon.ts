@@ -1,5 +1,6 @@
 // See ../GLOSSARY.md for mean elongation, argument of latitude, ascending node, libration, parallactic angle, and parallax.
 import {
+    applyParallax,
     type EclipticalCoords,
     type EquatorialCoords,
     eclipticalToEquatorial,
@@ -326,40 +327,9 @@ export function equatorialHorizontalParallaxApprox(t: JulianDay): number {
     return Math.asin(earth.MEAN_RADIUS_KM / distanceApprox(t)) * RAD_TO_DEG;
 }
 
-/** Corrects a geocentric equatorial position for parallax as seen from an observer's location, per Meeus'
- *  "Astronomical Algorithms" (40.7-40.9). Uses the same hour-angle convention as equatorialToHorizontal. */
-function applyParallax(
-    position: EquatorialCoords,
-    parallax: number,
-    siderealTime: JulianDay,
-    observersLatitude: number,
-    observersLongitude: number,
-): EquatorialCoords {
-    const H = (siderealTime + observersLongitude - position.rightAscension) * DEG_TO_RAD;
-    const phi = observersLatitude * DEG_TO_RAD;
-    const pi = parallax * DEG_TO_RAD;
-    const delta = position.declination * DEG_TO_RAD;
-
-    const sinPi = Math.sin(pi);
-    const cosPhi = Math.cos(phi);
-    const cosH = Math.cos(H);
-    const cosDelta = Math.cos(delta);
-
-    const deltaAlpha = Math.atan2(-cosPhi * sinPi * Math.sin(H), cosDelta - cosPhi * sinPi * cosH);
-    const deltaPrime = Math.atan2(
-        (Math.sin(delta) - Math.sin(phi) * sinPi) * Math.cos(deltaAlpha),
-        cosDelta - cosPhi * sinPi * cosH,
-    );
-
-    return {
-        rightAscension: normalizeDegrees(position.rightAscension + deltaAlpha * RAD_TO_DEG),
-        declination: deltaPrime * RAD_TO_DEG,
-    };
-}
-
 /** The Moon's topocentric equatorial position: apparentPosition corrected for an observer's parallax, since
- *  at the Moon's distance (~384,000 km) that shift is on the order of a degree, unlike the Sun's (see
- *  sun.ts, which has no topocentric variant since its parallax is negligible). Feeds horizontalPosition below. */
+ *  at the Moon's distance (~384,000 km) that shift is on the order of a degree (sun.ts has the same shape,
+ *  though its parallax is only ~8.8"). Feeds horizontalPosition below. */
 export function topocentricPosition(time: AstronomicalTime, latitude: number, longitude: number): EquatorialCoords {
     const t = julianDayUT(time);
     const s = meanSiderealTime(time);

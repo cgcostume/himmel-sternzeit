@@ -67,3 +67,36 @@ export function equatorialToHorizontal(
         ),
     };
 }
+
+/** Corrects a geocentric equatorial position for parallax as seen from an observer's location, per Meeus'
+ *  "Astronomical Algorithms" (40.7-40.9). Uses the same hour-angle convention as equatorialToHorizontal.
+ *  Shared by sun.ts and moon.ts: the Moon's parallax is large enough (~1 degree) to always matter, the Sun's
+ *  is tiny (~8.8") but applying it too keeps their topocentric positions on the same footing for eclipse math. */
+export function applyParallax(
+    position: EquatorialCoords,
+    parallax: number,
+    siderealTime: JulianDay,
+    observersLatitude: number,
+    observersLongitude: number,
+): EquatorialCoords {
+    const H = (siderealTime + observersLongitude - position.rightAscension) * DEG_TO_RAD;
+    const phi = observersLatitude * DEG_TO_RAD;
+    const pi = parallax * DEG_TO_RAD;
+    const delta = position.declination * DEG_TO_RAD;
+
+    const sinPi = Math.sin(pi);
+    const cosPhi = Math.cos(phi);
+    const cosH = Math.cos(H);
+    const cosDelta = Math.cos(delta);
+
+    const deltaAlpha = Math.atan2(-cosPhi * sinPi * Math.sin(H), cosDelta - cosPhi * sinPi * cosH);
+    const deltaPrime = Math.atan2(
+        (Math.sin(delta) - Math.sin(phi) * sinPi) * Math.cos(deltaAlpha),
+        cosDelta - cosPhi * sinPi * cosH,
+    );
+
+    return {
+        rightAscension: normalizeDegrees(position.rightAscension + deltaAlpha * RAD_TO_DEG),
+        declination: deltaPrime * RAD_TO_DEG,
+    };
+}

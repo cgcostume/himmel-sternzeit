@@ -42,3 +42,16 @@ test("approx.sun.apparentPosition roughly agrees with the precise result", () =>
     expect(approxEqu.rightAscension).toBeCloseTo(preciseEqu.rightAscension, 0);
     expect(approxEqu.declination).toBeCloseTo(preciseEqu.declination, 0);
 });
+
+test("sun.equatorialHorizontalParallax is on the order of the Sun's real ~8.8 arcsecond parallax", () => {
+    expect(precise.sun.equatorialHorizontalParallax(JDE)).toBeCloseTo(8.8 / 3600, 3);
+});
+
+test("sun.topocentricPosition nudges apparentPosition by no more than the Sun's parallax", () => {
+    const time = precise.fromJulianDay(JDE);
+    const apparent = precise.sun.apparentPosition(JDE);
+    const topocentric = precise.sun.topocentricPosition(time, 52.39, 13.09);
+
+    expect(Math.abs(topocentric.rightAscension - apparent.rightAscension)).toBeLessThan(8.8 / 3600);
+    expect(Math.abs(topocentric.declination - apparent.declination)).toBeLessThan(8.8 / 3600);
+});

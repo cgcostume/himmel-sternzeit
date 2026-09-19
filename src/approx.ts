@@ -59,6 +59,8 @@ export const sun = {
     meanAnomaly: sunImpl.meanAnomalyApprox,
     meanLongitude: sunImpl.meanLongitudeApprox,
     apparentPosition: sunImpl.apparentPositionApprox,
+    equatorialHorizontalParallax: sunImpl.equatorialHorizontalParallaxApprox,
+    topocentricPosition: sunImpl.topocentricPositionApprox,
     horizontalPosition: sunImpl.horizontalPositionApprox,
     distance: sunImpl.distanceApprox,
     apparentAngularDiameter: sunImpl.apparentAngularDiameterApprox,
