@@ -267,7 +267,10 @@ const domainOpenState = { earth: true, eclipse: true, sun: true, moon: true };
 
 function renderDomain(domainName, jd) {
     const [preciseNs, approxNs] = namespacesOf(domainName);
-    const names = [...new Set([...Object.keys(preciseNs), ...Object.keys(approxNs)])].sort();
+    // Not alphabetized: preserves each namespace's own hand-grouped declaration order (index.ts/approx.ts),
+    // e.g. apparentPosition/equatorialHorizontalParallax/topocentricPosition/horizontalPosition stay adjacent
+    // as a pipeline, which sorting would scatter (a.../e.../h.../t...).
+    const names = [...new Set([...Object.keys(preciseNs), ...Object.keys(approxNs)])];
     const rows = computeRows(domainName, names, preciseNs, approxNs, jd);
 
     return `

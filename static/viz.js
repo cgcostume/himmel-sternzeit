@@ -9,12 +9,19 @@ const DEG = Math.PI / 180;
 // that zoom. Instead these keep the same clearance gaps as before EARTH_R doubled, so Earth reads as
 // bigger relative to the sun/moon, not just bigger in an auto-zoom-cancelled absolute sense.
 const EARTH_R = 80;
-const MOON_R = 11;
-const SUN_R = 32;
 // Narrower gap than a strict distance scale would give (moon:sun is really ~1:390): keeps the sun where
 // it was and brings the moon closer to it, still clearly nearer but not as separated as before.
 const MOON_DIST = 320;
 const SUN_DIST = 460;
+
+// Disc *sizes* (unlike positions/distances above) ARE to real proportion: both discs are drawn from
+// apparentAngularDiameter each frame (see frame() below), so unlike everything else in this schematic,
+// their ratio matches what an observer would actually see, near 1:1 most of the time, and shifting with
+// real perigee/apogee and perihelion/aphelion, exactly as the difference between annular and total solar
+// eclipses does in reality. SUN_R is only a reference size, chosen to read well at this scene's scale, that
+// APPARENT_SIZE_SCALE is derived from so the sun starts out at roughly its old, hand-picked diameter.
+const SUN_R = 32;
+const APPARENT_SIZE_SCALE = (SUN_R * 2) / (precise.sun.apparentAngularDiameter(precise.J2000) * precise.RAD_TO_DEG);
 
 const KM_TO_SCENE = EARTH_R / precise.earth.MEAN_RADIUS_KM;
 const ATMOSPHERE_SHELL_DIAMETER = 2 * (EARTH_R + precise.earth.ATMOSPHERE_THICKNESS_KM * KM_TO_SCENE);
@@ -26,8 +33,14 @@ function v(x, y, z) {
 function vAdd(a, b) {
     return v(a.x + b.x, a.y + b.y, a.z + b.z);
 }
+function vSub(a, b) {
+    return v(a.x - b.x, a.y - b.y, a.z - b.z);
+}
 function vScale(a, s) {
     return v(a.x * s, a.y * s, a.z * s);
+}
+function vDot(a, b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 function vCross(a, b) {
     return v(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
@@ -36,6 +49,10 @@ function vNormalize(a) {
     const len = Math.hypot(a.x, a.y, a.z) || 1;
     return vScale(a, 1 / len);
 }
+// Celestial north in this scene's frame (see sphericalToVector's comment: +dec is -Y). Projecting this onto
+// the plane perpendicular to the current camera direction (see frame() below) gives a stable "up" for
+// moonAxisLine that varies smoothly as the scene is rotated, unlike billboardRotate's arbitrary twist.
+const NORTH = v(0, -1, 0);
 
 // Earth-centered equatorial frame: RA=0/dec=0 is the +X axis, the celestial equator is the XZ plane,
 // +dec is -Y (Zdog is screen-convention y-down, so "up"/north is negative y). Used for every body
@@ -203,25 +220,52 @@ const atmosphereShell = new Ellipse({
 });
 
 const sunAnchor = new Anchor({ addTo: illustration });
-// An outline, billboarded disc, same dotted-fixed-reference styling as atmosphereShell above, rather than
-// earthAnchor's two-ring (outline + equator) treatment or a filled disc: always presents a full circle to
-// the viewer regardless of scene rotation, which the two-ring approach (oriented toward Earth, not the
-// camera) didn't guarantee. Plain black, same as everything else: yellow/grey didn't read well against the
-// dotted stroke at this size.
+// A solid, billboarded outline, deliberately not dotted like atmosphereShell/moonDisc: with the sunrays
+// below, the sun is the one body meant to read as a concrete, currently-there thing rather than a fixed
+// reference construction, matching radiusLine's "solid = the actual answer" tier. Always presents a full
+// circle to the viewer regardless of scene rotation, unlike earthAnchor's two-ring (outline + equator)
+// treatment, which is oriented toward Earth, not the camera. Plain black, same as everything else:
+// yellow/grey didn't read well against the dotted stroke at this size.
 const sunDisc = new Ellipse({ addTo: sunAnchor, diameter: SUN_R * 2, color: "#000", stroke: 1, fill: false });
 // Mirrors earthAnchor's centerDot: a fixed point at the body's own center, so apparentPosition/distance rows
 // have an exact point to highlight rather than only the disc's outline.
 const sunCenterDot = new Shape({ addTo: sunAnchor, stroke: 3, color: "#000" });
 
+// Sunrays: the one purely decorative touch in this otherwise data-driven scene, so the sun reads as the sun
+// at a glance instead of just "the bigger of two identical outline circles" next to the moon (whose apparent
+// size is now often close to the sun's, see APPARENT_SIZE_SCALE above). Short strokes radiating from just
+// outside the disc's edge, camera-facing like the disc itself; a gap separates them from the outline so they
+// don't visually fuse into it. Recomputed every frame in frame() below since sunDisc's own radius changes
+// with apparentAngularDiameter. Dotted (see the dash-array loop in frame()), unlike the now-solid disc: the
+// disc itself is the "concrete, currently-there" answer, the rays are just flourish around it.
+const SUN_RAY_COUNT = 12;
+const SUN_RAY_GAP = 8;
+const SUN_RAY_LENGTH = 24;
+const sunRays = Array.from(
+    { length: SUN_RAY_COUNT },
+    () => new Shape({ addTo: sunAnchor, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: "#000" }),
+);
+
 const moonAnchor = new Anchor({ addTo: illustration });
-const moonDisc = new Ellipse({ addTo: moonAnchor, diameter: MOON_R * 2, color: "#000", stroke: 1, fill: false });
+const moonDisc = new Ellipse({
+    addTo: moonAnchor,
+    diameter: APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(precise.J2000) * precise.RAD_TO_DEG,
+    color: "#000",
+    stroke: 1,
+    fill: false,
+});
 const moonCenterDot = new Shape({ addTo: moonAnchor, stroke: 3, color: "#000" });
-// Tidal lock emphasis: a line from the moon's center to the point nearest Earth, adjusted by the actual
-// optical libration + position-angle-of-axis, with a dot marking that exact point; the line's endpoint IS
-// the dot's position (see frame()), not a separately computed nearby point, so they never visibly drift
-// apart. The point still wanders a little as JD advances (particularly in live mode), since libration does.
-const moonFaceLine = new Shape({ addTo: moonAnchor, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1.5, color: "#000" });
-const moonFaceDot = new Shape({ addTo: moonAnchor, stroke: 3, color: "#000", translate: { z: 0.1 } });
+// The Moon's rotation axis, mirroring earthAnchor's axisLine, but built differently: this codebase doesn't
+// carry the Moon's full 3D orientation the way it does Earth's (obliquity/nutation give real ecliptic-frame
+// vectors), only positionAngleOfAxis (P), Meeus' as-seen-from-Earth angle between the projected axis and the
+// lunar disk's north point, measured eastward. P already folds in both the Moon's small (~1.54 degree)
+// equator inclination and its libration-driven wobble over time, so rather than reconstruct a full 3D
+// vector, this line is anchored to celestial north projected onto the sky plane at the Moon's position (see
+// frame() below), then rotated within that plane by P: this is deliberately NOT the disc's own billboard
+// rotation (see billboardRotate above), whose in-plane twist is an arbitrary side effect of rotateToFace's
+// derivation, not a stable reference direction; using it here made the axis visibly spin as the scene was
+// dragged, with no relation to anything real.
+const moonAxisLine = new Shape({ addTo: moonAnchor, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: "#000" });
 
 // Zdog's SVG renderer scales stroke-width along with everything else in the viewBox (see the zoom comment
 // above illustration's declaration): a stroke of `n` at zoom=1 renders as `n*zoom` screen pixels, so line
@@ -247,10 +291,10 @@ const ALL_SHAPES = [
     atmosphereShell,
     sunDisc,
     sunCenterDot,
+    ...sunRays,
     moonDisc,
     moonCenterDot,
-    moonFaceLine,
-    moonFaceDot,
+    moonAxisLine,
 ];
 const BASE_STROKE = new Map(ALL_SHAPES.map((shape) => [shape, shape.stroke]));
 
@@ -323,11 +367,10 @@ const SHAPE_MAP = {
     "earth.orbitEccentricity": [orbitEllipse],
     "earth.siderealTime": [meridianRing, radiusLine, observerMarker],
     "sun.apparentPosition": [sunCenterDot],
-    "sun.distance": [sunDisc],
+    "sun.distance": [sunDisc, ...sunRays],
     "moon.apparentPosition": [moonCenterDot],
     "moon.distance": [moonDisc],
-    "moon.opticalLibrations": [moonFaceLine, moonFaceDot],
-    "moon.positionAngleOfAxis": [moonFaceLine, moonFaceDot],
+    "moon.positionAngleOfAxis": [moonAxisLine],
 };
 // Every highlightable shape, paired with its resting (non-hovered) color, restored each frame before that
 // frame's highlight (if any) is applied on top. The atmosphere shell rests at the page's own accent color,
@@ -351,8 +394,6 @@ function frame() {
 
     const sunEqu = precise.sun.apparentPosition(jd);
     const moonEqu = precise.moon.apparentPosition(jd);
-    const libration = precise.moon.opticalLibrations(jd);
-    const positionAngleOfAxis = precise.moon.positionAngleOfAxis(jd);
     const siderealTime = precise.siderealTime(time);
     const obliquity = precise.earth.trueObliquity(jd);
 
@@ -363,8 +404,37 @@ function frame() {
 
     sunAnchor.translate = sunPos;
     sunDisc.rotate = billboardRotate(rotX, rotY);
+    sunDisc.diameter = APPARENT_SIZE_SCALE * precise.sun.apparentAngularDiameter(jd) * precise.RAD_TO_DEG;
+    sunDisc.updatePath();
+    const sunRayInner = sunDisc.diameter / 2 + SUN_RAY_GAP;
+    const sunRayOuter = sunRayInner + SUN_RAY_LENGTH;
+    sunRays.forEach((ray, i) => {
+        const rayAngle = (i / SUN_RAY_COUNT) * 2 * Math.PI;
+        const cosA = Math.cos(rayAngle);
+        const sinA = Math.sin(rayAngle);
+        ray.rotate = billboardRotate(rotX, rotY);
+        ray.path = [v(sunRayInner * cosA, sunRayInner * sinA, 0), v(sunRayOuter * cosA, sunRayOuter * sinA, 0)];
+        ray.updatePath();
+    });
     moonAnchor.translate = moonPos;
     moonDisc.rotate = billboardRotate(rotX, rotY);
+    moonDisc.diameter = APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(jd) * precise.RAD_TO_DEG;
+    moonDisc.updatePath();
+    const moonAxisHalfLength = moonDisc.diameter / 2;
+    const positionAngleOfAxis = precise.moon.positionAngleOfAxis(jd);
+    // Camera direction: same target billboardRotate points shapes' local +Z at (see its comment), so this is
+    // the real-world direction that ends up screen-facing once the scene's own rotX/rotY rotation applies.
+    const cosRotX = Math.cos(rotX);
+    const cameraDir = v(cosRotX * Math.sin(rotY), Math.sin(rotX), cosRotX * Math.cos(rotY));
+    // Celestial north, projected onto the plane of the sky (perpendicular to cameraDir): a stable "up" that
+    // rotates continuously with the scene instead of billboardRotate's arbitrary in-plane twist.
+    const northOnSky = vNormalize(vSub(NORTH, vScale(cameraDir, vDot(NORTH, cameraDir))));
+    const paa = positionAngleOfAxis * DEG;
+    // Rotate northOnSky by P (eastward, per Meeus) about cameraDir; northOnSky ⟂ cameraDir already, so the
+    // Rodrigues formula's third term (which needs that dot product) drops out.
+    const axisDir = vAdd(vScale(northOnSky, Math.cos(paa)), vScale(vCross(cameraDir, northOnSky), Math.sin(paa)));
+    moonAxisLine.path = [vScale(axisDir, -moonAxisHalfLength), vScale(axisDir, moonAxisHalfLength)];
+    moonAxisLine.updatePath();
     atmosphereShell.rotate = billboardRotate(rotX, rotY);
     // observerPos already has magnitude EARTH_R (sphericalToVector's radius arg), so this only needs a
     // plain 1.02x nudge above the surface, not a divide-by-EARTH_R (that previously collapsed the whole
@@ -421,25 +491,6 @@ function frame() {
     orbitEllipse.rotate = { x: Math.PI / 2 + obliquity * DEG };
     orbitEllipse.updatePath();
 
-    // Moon face marker geometry, see comment at moonFaceLine's declaration.
-    const earthward = vNormalize(vScale(moonPos, -1));
-    const ref = Math.abs(earthward.y) < 0.9 ? v(0, 1, 0) : v(1, 0, 0);
-    const u = vNormalize(vCross(ref, earthward));
-    const vAxis = vCross(earthward, u);
-    const paa = positionAngleOfAxis * DEG;
-    const cosPaa = Math.cos(paa);
-    const sinPaa = Math.sin(paa);
-    const u2 = vAdd(vScale(u, cosPaa), vScale(vAxis, sinPaa));
-    const v2 = vAdd(vScale(u, -sinPaa), vScale(vAxis, cosPaa));
-    const wobble = vAdd(
-        vScale(u2, Math.sin(libration.longitude * DEG)),
-        vScale(v2, Math.sin(libration.latitude * DEG)),
-    );
-    const wobblePoint = vScale(vNormalize(vAdd(earthward, vScale(wobble, 1.5))), MOON_R * 0.85);
-    moonFaceLine.path[1] = wobblePoint;
-    moonFaceLine.updatePath();
-    moonFaceDot.translate = { ...wobblePoint, z: wobblePoint.z + 0.1 };
-
     // Table row -> scene only; no reverse direction (hovering the scene doesn't highlight a table row). A
     // row hover with no dedicated SHAPE_MAP entry highlights nothing at all, rather than falling back to
     // "the whole body": that fallback used to make every earth row look like it does something, when most
@@ -477,7 +528,7 @@ function frame() {
         trueObliquityArcSouth,
         atmosphereShell,
         moonDisc,
-        sunDisc,
+        ...sunRays,
     ]) {
         shape.svgElement?.setAttribute("stroke-dasharray", dotDash);
         shape.svgElement?.setAttribute("stroke-linecap", "round");
