@@ -267,7 +267,11 @@ export function viewDistanceWithinAtmosphere(y: number, refractionCorrected = fa
     return (Math.cos(h + Math.asin((cosa * r) / rt)) * rt) / cosa;
 }
 
+// The bracket is airmass-shaped and should be ~1 at zenith (y=1), since by definition the path length
+// straight up equals exactly the atmosphere thickness t. The original osgHimmel C++ (earth2.cpp) has
+// 1116.0 here, which gives ~999.6 at zenith instead of ~1: a decimal-point typo for 1.116, off by exactly
+// 1000x. Fixed here since it's off by orders of magnitude at every altitude, not a porting decision.
 /** This is not refraction corrected. Only valid for the Earth's actual mean radius. */
 export function viewDistanceWithinAtmosphereApprox(y: number): number {
-    return (ATMOSPHERE_THICKNESS_KM * 1116.0) / ((y + 0.004) * 1.1116);
+    return (ATMOSPHERE_THICKNESS_KM * 1.116) / ((y + 0.004) * 1.1116);
 }

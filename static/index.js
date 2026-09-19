@@ -157,49 +157,8 @@ function cell(value, present, unit) {
     return present ? `<td class="value">${formatValue(value, unit)}</td>` : `<td class="value missing">—</td>`;
 }
 
-// performance.now() is itself sub-millisecond, but browsers clamp its actual resolution (Spectre
-// mitigation/fingerprinting), so a single pass is mostly measurement noise. The benchmark button averages
-// many passes instead; values are pure functions of jd, so re-running them changes nothing except the
-// timing signal. Not run on every render, that'd be 1000x the work for a plain value display.
-const TIMING_REPEATS = 1000;
-const lastBenchmark = { earth: null, sun: null, moon: null };
-
-// Raw export calls only, no HTML building, so the benchmark isolates the astronomy math itself
-// rather than computeRows' string-building overhead. precise/approx are timed in separate passes
-// (rather than interleaved, as computeRows does for display) so one variant's cost can't skew the other's.
-function timeNamespace(names, ns, jd, repeats) {
-    const start = performance.now();
-    for (let i = 0; i < repeats; i++) {
-        for (const name of names) callExport(name, ns[name], jd);
-    }
-    return ((performance.now() - start) / repeats) * 1000; // µs avg
-}
-
 // data-domain/data-name/data-field identify each row for the hover -> visualization link (see the
 // "inspector:hover" CustomEvent dispatched below); viz.js listens for it independently, no import between them.
-// Exports viz.js knows how to turn into a persistent scene annotation (see index.html's #annoXxx-era
-// note, now superseded by this checkbox column). All six are scalar, never one of the object-returning
-// exports (apparentPosition, horizontalPosition, ...), so annotateCell() only ever fires in the non-field
-// branch below, but every row still needs its own leading cell, checkbox or empty, for column alignment.
-const ANNOTATABLE_NAMES = new Set([
-    "longitudeNutation",
-    "meanObliquity",
-    "trueObliquity",
-    "obliquityNutation",
-    "orbitEccentricity",
-    "viewDistanceWithinAtmosphere",
-]);
-// Persists across render()'s full tablesDiv.innerHTML rebuilds (every render, every second in live mode),
-// which would otherwise reset every checkbox to unchecked; annotateCell() reads this to restore state.
-// orbitEccentricity/trueObliquity start checked, a reasonable default view of the scene.
-const checkedAnnotations = new Set(["orbitEccentricity", "trueObliquity"]);
-
-function annotateCell(name) {
-    if (!ANNOTATABLE_NAMES.has(name)) return "<td></td>";
-    const checked = checkedAnnotations.has(name) ? " checked" : "";
-    return `<td><input type="checkbox" data-annotate="${name}"${checked} /></td>`;
-}
-
 function computeRows(domainName, names, preciseNs, approxNs, jd) {
     return names
         .flatMap((name) => {
@@ -221,12 +180,12 @@ function computeRows(domainName, names, preciseNs, approxNs, jd) {
                 return fields.map((field) => {
                     const preciseHasField = isPlainObject(preciseValue) && field in preciseValue;
                     const approxHasField = isPlainObject(approxValue) && field in approxValue;
-                    return `<tr data-domain="${domainName}" data-name="${name}" data-field="${field}">${annotateCell(name)}<td title="${describe(name, field)}">${name}.${field}</td><td>${unit}</td>${cell(preciseValue?.[field], preciseHasField, unit)}${cell(approxValue?.[field], approxHasField, unit)}</tr>`;
+                    return `<tr data-domain="${domainName}" data-name="${name}" data-field="${field}"><td title="${describe(name, field)}">${name}.${field}</td><td>${unit}</td>${cell(preciseValue?.[field], preciseHasField, unit)}${cell(approxValue?.[field], approxHasField, unit)}</tr>`;
                 });
             }
 
             return [
-                `<tr data-domain="${domainName}" data-name="${name}">${annotateCell(name)}<td title="${describe(name)}">${name}</td><td>${unit}</td>${cell(preciseValue, hasPrecise, unit)}${cell(approxValue, hasApprox, unit)}</tr>`,
+                `<tr data-domain="${domainName}" data-name="${name}"><td title="${describe(name)}">${name}</td><td>${unit}</td>${cell(preciseValue, hasPrecise, unit)}${cell(approxValue, hasApprox, unit)}</tr>`,
             ];
         })
         .join("");
@@ -239,35 +198,17 @@ function renderDomain(domainName, jd) {
     const [preciseNs, approxNs] = namespacesOf(domainName);
     const names = [...new Set([...Object.keys(preciseNs), ...Object.keys(approxNs)])].sort();
     const rows = computeRows(domainName, names, preciseNs, approxNs, jd);
-    const timing = lastBenchmark[domainName] ?? "not benchmarked yet";
 
     return `
         <details class="domain" open>
-            <summary>${domainName} <span id="timing-${domainName}" class="note">(${timing})</span></summary>
+            <summary>${domainName}</summary>
             <table>
-                <colgroup><col class="anno" /><col class="name" /><col class="unit" /><col class="value" /><col class="value" /></colgroup>
-                <thead><tr><th></th><th>export</th><th>unit</th><th class="value">precise</th><th class="value">approx</th></tr></thead>
+                <colgroup><col class="name" /><col class="unit" /><col class="value" /><col class="value" /></colgroup>
+                <thead><tr><th>export</th><th>unit</th><th class="value">precise</th><th class="value">approx</th></tr></thead>
                 <tbody>${rows}</tbody>
             </table>
         </details>
     `;
-}
-
-function runBenchmarks() {
-    const jd = Number(jdInput.value);
-    for (const domainName of ["earth", "sun", "moon"]) {
-        const [preciseNs, approxNs] = namespacesOf(domainName);
-        const preciseNames = Object.keys(preciseNs).sort();
-        const approxNames = Object.keys(approxNs).sort();
-
-        const preciseUs = timeNamespace(preciseNames, preciseNs, jd, TIMING_REPEATS);
-        const approxUs = timeNamespace(approxNames, approxNs, jd, TIMING_REPEATS);
-
-        lastBenchmark[domainName] =
-            `precise: ${preciseUs.toFixed(1)} µs avg, approx: ${approxUs.toFixed(1)} µs avg, over ${TIMING_REPEATS} runs each`;
-        const timingSpan = document.getElementById(`timing-${domainName}`);
-        if (timingSpan) timingSpan.textContent = `(${lastBenchmark[domainName]})`;
-    }
 }
 
 // fromJulianDay(jd) always comes back with utcOffsetSeconds: 0 (see the CALL_OVERRIDES comment above), i.e.
@@ -292,7 +233,6 @@ const jdInput = document.getElementById("jd");
 const jdStepSelect = document.getElementById("jdStep");
 const nowButton = document.getElementById("now");
 const liveCheckbox = document.getElementById("live");
-const benchmarkButton = document.getElementById("benchmark");
 const calendarSpan = document.getElementById("calendar");
 const copyCalendarButton = document.getElementById("copyCalendar");
 const tablesDiv = document.getElementById("tables");
@@ -307,8 +247,6 @@ const locationSpan = document.getElementById("location");
 const altitudeInput = document.getElementById("altitude");
 const altitudeStepSelect = document.getElementById("altitudeStep");
 const altitudeDmsSpan = document.getElementById("altitudeDms");
-
-benchmarkButton.addEventListener("click", runBenchmarks);
 
 copyCalendarButton.addEventListener("click", () => navigator.clipboard.writeText(calendarSpan.textContent));
 
@@ -385,10 +323,10 @@ wireStepping(altitudeInput, altitudeStepSelect, LATLONG_DECIMALS);
 tablesDiv.addEventListener("mouseover", (event) => {
     const row = event.target.closest("tr[data-domain]");
     if (!row) return;
-    // 4th <td> is the precise-column value cell (annotate/export/unit/precise/approx); reused as-is
-    // (already formatted, deg notation and all) rather than recomputing it, so the annotation always
-    // matches exactly what the row itself is showing.
-    const preciseCell = row.children[3];
+    // 3rd <td> is the precise-column value cell (export/unit/precise/approx); reused as-is (already
+    // formatted, deg notation and all) rather than recomputing it, so the tooltip text always matches
+    // exactly what the row itself is showing.
+    const preciseCell = row.children[2];
     window.dispatchEvent(
         new CustomEvent("inspector:hover", {
             detail: {
@@ -404,26 +342,6 @@ tablesDiv.addEventListener("mouseout", (event) => {
     const row = event.target.closest("tr[data-domain]");
     if (!row || row.contains(event.relatedTarget)) return;
     window.dispatchEvent(new CustomEvent("inspector:hover", { detail: null }));
-});
-
-// Checkbox state lives in checkedAnnotations (see annotateCell()), not just the DOM, since the DOM gets
-// rebuilt on every render(). viz.js listens for this independently, same pattern as inspector:hover.
-tablesDiv.addEventListener("change", (event) => {
-    const checkbox = event.target.closest("input[data-annotate]");
-    if (!checkbox) return;
-    const name = checkbox.dataset.annotate;
-    if (checkbox.checked) checkedAnnotations.add(name);
-    else checkedAnnotations.delete(name);
-    window.dispatchEvent(new CustomEvent("inspector:annotate", { detail: [...checkedAnnotations] }));
-});
-
-// The reverse direction: viz.js dispatches this when the pointer hits a body directly in the scene, so
-// hovering it there highlights every row for that domain here, the same way hovering a row highlights it.
-let vizHoveredRows = [];
-window.addEventListener("viz:hover", (event) => {
-    for (const row of vizHoveredRows) row.classList.remove("row-hover");
-    vizHoveredRows = event.detail ? [...tablesDiv.querySelectorAll(`tr[data-domain="${event.detail}"]`)] : [];
-    for (const row of vizHoveredRows) row.classList.add("row-hover");
 });
 
 let liveIntervalId = null;
@@ -504,6 +422,3 @@ altitudeInput.value = capDecimals(Number(altitudeInput.value), LATLONG_DECIMALS)
 
 setToNow();
 render();
-// Deliberately no "inspector:annotate" dispatch here for the pre-checked defaults: viz.js reads the DOM
-// directly for its initial state instead (see its own comment), since a dispatch from here would already
-// be lost by the time that module's listener exists. This call only matters for later checkbox changes.

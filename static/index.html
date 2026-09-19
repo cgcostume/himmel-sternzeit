@@ -8,11 +8,21 @@
 </head>
 <body>
 
+<div class="sticky-vis">
 <h1>@himmel/<strong>sternzeit</strong> dev inspector</h1>
+<div id="scene">
+    <svg id="stage"></svg>
+</div>
+</div>
+
+<div class="page">
+
 <p class="note">
     Local dev tool only, not part of the package build. Requires <code>pnpm build</code> to have run first
     (loads <code>../dist/index.js</code> and <code>../dist/approx.js</code> directly), and must be served over
-    http, not opened as a <code>file://</code> URL (ES module imports are blocked there).
+    http, not opened as a <code>file://</code> URL (ES module imports are blocked there). Not to scale: earth/sun/moon
+    sizes and distances above are chosen for visibility, not physical proportion. Drag to rotate, scroll to zoom.
+    Hover a row in the tables below to highlight what it corresponds to above.
 </p>
 
 <div class="input-grid">
@@ -28,12 +38,10 @@
         <option value="0.0000115740741" selected>± second</option>
     </select>
     <span class="input-grid-extra">
-        <code id="calendar"></code>
-        <button id="copyCalendar" type="button">copy</button>
-    </span>
-    <span class="input-grid-subrow">
         <button id="now" type="button">now</button>
         <label><input id="live" type="checkbox" /> live</label>
+        <code id="calendar"></code>
+        <button id="copyCalendar" type="button">copy</button>
     </span>
 
     <label for="latitude">Latitude</label>
@@ -74,21 +82,9 @@
     view direction vector, since that's the form a renderer's ray would already be in.
 </p>
 
-<h2>schematic view</h2>
-<p class="note">
-    Not to scale: earth/sun/moon sizes and distances are chosen for visibility, not physical proportion. Driven by
-    the same Julian Day / latitude / longitude above. Drag to rotate. Hover a row in the tables below to highlight
-    what it corresponds to here; check a row (where available) to keep its annotation on persistently.
-</p>
-<div id="scene">
-    <svg id="stage"></svg>
-    <div id="tooltip" class="tooltip" hidden></div>
-    <div id="sunLabel" class="body-label"></div>
-    <div id="moonLabel" class="body-label"></div>
-</div>
-
-<button id="benchmark" type="button">run benchmark</button>
 <div id="tables"></div>
+
+</div>
 
 <script src="../node_modules/zdog/dist/zdog.dist.js"></script>
 <script type="module" src="index.js"></script>

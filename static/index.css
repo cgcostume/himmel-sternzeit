@@ -1,19 +1,37 @@
-:root { color-scheme: light; }
+:root { color-scheme: light; --accent: #007fff; }
 body {
     font-family: ui-monospace, Menlo, Consolas, monospace;
     font-size: 13px;
     font-weight: 300;
-    margin: 2rem;
-    max-width: 1000px;
+    line-height: 1.6;
+    margin: 0;
     background: #fff;
     color: #111;
 }
 h1 { font-size: 1.1rem; font-weight: 400; }
 h2 { font-size: 1rem; margin-top: 2rem; font-weight: 400; }
 p.note { opacity: 0.6; }
+strong, b { color: var(--accent); }
+/* The title + schematic view pin to the top of the viewport as you scroll; everything else (inputs, tables)
+   is a single centered column that scrolls underneath it. Own background + shadow so scrolled-under content
+   visibly passes behind it rather than showing through. */
+.sticky-vis {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 1rem;
+    border-bottom: 1px solid var(--accent);
+}
+/* Bootstrap's 12-column lg container width, so the tables' fixed columns finally have room to breathe. */
+.page { max-width: 1140px; margin: 0 auto; padding: 1.5rem 2rem 2rem; }
 details.domain { margin-top: 2rem; }
 details.domain > summary {
     font-size: 1rem;
+    font-weight: 400;
+    color: var(--accent);
     cursor: pointer;
     list-style-position: outside;
 }
@@ -44,29 +62,30 @@ input, button, select {
     border-radius: 4px;
     padding: 0.15rem 0.4rem;
 }
-button:hover, select:hover { border-color: #111; }
-code {
+button:hover, select:hover { border-color: var(--accent); }
+input:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+code, pre {
     background: #fafafa;
     border: 1px solid #e5e5e5;
     border-radius: 4px;
     padding: 0.15rem 0.4rem;
-    user-select: all;
+    color: var(--accent);
 }
+code { user-select: all; }
+pre { padding: 0.6rem 0.8rem; overflow-x: auto; }
 table {
     border-collapse: collapse; width: 100%; margin-bottom: 1rem; table-layout: fixed; font-variant-numeric: tabular-nums;
     border: 1px solid #ccc; border-radius: 6px; overflow: hidden;
 }
 th, td { border: 1px solid #e5e5e5; padding: 0.3rem 0.6rem; text-align: left; vertical-align: top; overflow-wrap: break-word; }
 th { opacity: 0.7; font-weight: 400; background: #fafafa; }
-col.anno { width: 4%; }
 col.name { width: 30%; }
 col.unit { width: 8%; }
 col.value { width: 29%; }
 th.value, td.value { text-align: right; padding-right: 1rem; white-space: pre; }
 td.missing { opacity: 0.4; }
-td:has(input[type="checkbox"]) { text-align: center; }
 /* Only the export-name cell ever gets a title attribute (see describe() in index.js), so this alone is
    enough to target it, no need to also scope by column. */
 td[title] { text-decoration: underline dotted #999; cursor: help; text-underline-offset: 3px; }
 tr:nth-child(even) { background: #f7f7f7; }
-tbody tr:hover, tbody tr.row-hover { background: #eef4ff; }
+tbody tr:hover { background: color-mix(in srgb, var(--accent) 10%, #fff); }
