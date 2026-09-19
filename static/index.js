@@ -105,6 +105,8 @@ const CALL_OVERRIDES = {
     // would double-shift the instant, since jd carries no timezone to begin with.
     horizontalPosition: (fn, jd) =>
         fn(precise.fromJulianDay(jd), Number(latitudeInput.value), Number(longitudeInput.value)),
+    topocentricPosition: (fn, jd) =>
+        fn(precise.fromJulianDay(jd), Number(latitudeInput.value), Number(longitudeInput.value)),
     parallacticAngle: (fn, jd) =>
         fn(precise.fromJulianDay(jd), Number(latitudeInput.value), Number(longitudeInput.value)),
     // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
