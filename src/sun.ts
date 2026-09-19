@@ -6,7 +6,7 @@ import {
     type HorizontalCoords,
 } from "./coords.js";
 import * as earth from "./earth.js";
-import { auToKm, degToRad, normalizeDegrees, radToDeg } from "./math.js";
+import { auToKm, DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import * as moon from "./moon.js";
 import { meanSiderealTime, meanSiderealTimeApprox } from "./siderealTime.js";
 import { type AstronomicalTime, type JulianDay, julianCenturiesSinceStandardEquinox, julianDayUT } from "./time.js";
@@ -26,7 +26,7 @@ export function meanAnomaly(t: JulianDay): number {
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
 export function meanAnomalyApprox(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
-    const M = radToDeg(6.24 + 628.302 * T);
+    const M = (6.24 + 628.302 * T) * RAD_TO_DEG;
 
     return normalizeDegrees(M);
 }
@@ -48,7 +48,7 @@ export function meanLongitudeApprox(t: JulianDay): number {
 /** Equation of the center (AA p152). */
 export function center(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
-    const M = degToRad(meanAnomaly(t));
+    const M = meanAnomaly(t) * DEG_TO_RAD;
 
     return (
         (1.9146 - T * (0.004817 - T * 0.000014)) * Math.sin(M) +
@@ -68,26 +68,25 @@ export function trueLongitude(t: JulianDay): number {
 }
 
 export function apparentPosition(t: JulianDay): EquatorialCoords {
-    const O = degToRad(moon.meanAscendingNodeLongitude(t));
-    const e = degToRad(earth.trueObliquity(t) + 0.00256 * Math.cos(O));
-    const l = degToRad(trueLongitude(t) - 0.00569 - 0.00478 * Math.sin(O));
+    const O = moon.meanAscendingNodeLongitude(t) * DEG_TO_RAD;
+    const e = (earth.trueObliquity(t) + 0.00256 * Math.cos(O)) * DEG_TO_RAD;
+    const l = (trueLongitude(t) - 0.00569 - 0.00478 * Math.sin(O)) * DEG_TO_RAD;
 
     const sinl = Math.sin(l);
 
     return {
-        rightAscension: normalizeDegrees(radToDeg(Math.atan2(Math.cos(e) * sinl, Math.cos(l)))),
-        declination: radToDeg(Math.asin(Math.sin(e) * sinl)),
+        rightAscension: normalizeDegrees(Math.atan2(Math.cos(e) * sinl, Math.cos(l)) * RAD_TO_DEG),
+        declination: Math.asin(Math.sin(e) * sinl) * RAD_TO_DEG,
     };
 }
 
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
 export function apparentPositionApprox(t: JulianDay): EquatorialCoords {
     const T = julianCenturiesSinceStandardEquinox(t);
-    const M = degToRad(meanAnomalyApprox(t));
+    const M = meanAnomalyApprox(t) * DEG_TO_RAD;
 
-    const longitude = radToDeg(
-        4.895048 + 628.331951 * T + (0.033417 - 0.000084 * T) * Math.sin(M) + 0.000351 * Math.sin(2 * M),
-    );
+    const longitude =
+        (4.895048 + 628.331951 * T + (0.033417 - 0.000084 * T) * Math.sin(M) + 0.000351 * Math.sin(2 * M)) * RAD_TO_DEG;
 
     return eclipticalToEquatorial({ longitude, latitude: 0 }, earth.trueObliquityApprox(t));
 }
@@ -113,7 +112,7 @@ export function horizontalPositionApprox(
 /** Distance from the center of the Sun to the center of the Earth, in kilometers (AA.24.5). */
 export function distance(t: JulianDay): number {
     const e = earth.orbitEccentricity(t);
-    const R = (1.000001018 * (1.0 - e * e)) / (1.0 + e * Math.cos(degToRad(trueAnomaly(t))));
+    const R = (1.000001018 * (1.0 - e * e)) / (1.0 + e * Math.cos(trueAnomaly(t) * DEG_TO_RAD));
 
     return auToKm(R);
 }

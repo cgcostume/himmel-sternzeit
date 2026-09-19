@@ -44,6 +44,9 @@ The primary sources cited throughout the code (see individual function docstring
 - T. Nishita, T. Sirai, K. Tadamura, E. Nakamae, "Display of the Earth Taking into Account Atmospheric
   Scattering" (SIGGRAPH 1993), and E. Bruneton, F. Neyret, "Precomputed Atmospheric Scattering" (2008) —
   atmosphere thickness constant.
+- Daniel Müller (now Limberger), Juri Engel, Jürgen Döllner,
+  ["Single-Pass Rendering of Day and Night Sky Phenomena"](https://diglib.eg.org/items/0b9332fd-d155-452a-b9e0-1c605d557730)
+  (VMV 2012) — lunar eclipse phase parameterization (`eclipse.ts`).
 
 ## Development
 

@@ -1,5 +1,5 @@
 // See ../GLOSSARY.md for equatorial/ecliptic/horizontal coordinates, obliquity, and hour angle.
-import { degToRad, normalizeDegrees, radToDeg } from "./math.js";
+import { DEG_TO_RAD, normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import type { JulianDay } from "./time.js";
 
 export interface EquatorialCoords {
@@ -25,23 +25,24 @@ export interface HorizontalCoords {
 
 /** Ecliptical to equatorial coordinates, per Meeus' "Astronomical Algorithms" (13.3, 13.4). */
 export function eclipticalToEquatorial(ecl: EclipticalCoords, obliquity: number): EquatorialCoords {
-    const e = degToRad(obliquity);
-    const l = degToRad(ecl.longitude);
-    const b = degToRad(ecl.latitude);
+    const e = obliquity * DEG_TO_RAD;
+    const l = ecl.longitude * DEG_TO_RAD;
+    const b = ecl.latitude * DEG_TO_RAD;
 
     const cose = Math.cos(e);
     const sine = Math.sin(e);
     const sinl = Math.sin(l);
 
     return {
-        rightAscension: normalizeDegrees(radToDeg(Math.atan2(sinl * cose - Math.tan(b) * sine, Math.cos(l)))),
-        declination: radToDeg(Math.asin(Math.sin(b) * cose + Math.cos(b) * sine * sinl)),
+        rightAscension: normalizeDegrees(Math.atan2(sinl * cose - Math.tan(b) * sine, Math.cos(l)) * RAD_TO_DEG),
+        declination: Math.asin(Math.sin(b) * cose + Math.cos(b) * sine * sinl) * RAD_TO_DEG,
     };
 }
 
 /**
  * Equatorial to horizontal coordinates, per Meeus' "Astronomical Algorithms" (12.5, 12.6).
- * `observersLongitude` is positive west.
+ * `observersLongitude` is positive east (standard geographic convention: LST = GST + east longitude),
+ * verified against the 2024-04-08 total solar eclipse via eclipse.ts's solarEclipseState.
  */
 export function equatorialToHorizontal(
     equ: EquatorialCoords,
@@ -50,15 +51,15 @@ export function equatorialToHorizontal(
     observersLongitude: number,
 ): HorizontalCoords {
     // Local hour angle: H = θ - α (AA.p88).
-    const H = degToRad(siderealTime + observersLongitude - equ.rightAscension);
-    const declination = degToRad(equ.declination);
+    const H = (siderealTime + observersLongitude - equ.rightAscension) * DEG_TO_RAD;
+    const declination = equ.declination * DEG_TO_RAD;
 
     const cosH = Math.cos(H);
-    const sinLat = Math.sin(degToRad(observersLatitude));
-    const cosLat = Math.cos(degToRad(observersLatitude));
+    const sinLat = Math.sin(observersLatitude * DEG_TO_RAD);
+    const cosLat = Math.cos(observersLatitude * DEG_TO_RAD);
 
     return {
-        altitude: radToDeg(Math.asin(sinLat * Math.sin(declination) + cosLat * Math.cos(declination) * cosH)),
-        azimuth: radToDeg(Math.atan2(Math.sin(H), cosH * sinLat - Math.tan(declination) * cosLat)),
+        altitude: Math.asin(sinLat * Math.sin(declination) + cosLat * Math.cos(declination) * cosH) * RAD_TO_DEG,
+        azimuth: Math.atan2(Math.sin(H), cosH * sinLat - Math.tan(declination) * cosLat) * RAD_TO_DEG,
     };
 }

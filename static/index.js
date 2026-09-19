@@ -13,6 +13,11 @@ const UNITS = {
     orbitEccentricity: "",
     apparentAngularSunDiameter: "rad",
     apparentAngularMoonDiameter: "rad",
+    "solar.phase": "",
+    "solar.linearPhase": "",
+    "lunar.axisOffsetKm": "km",
+    "lunar.phase": "",
+    "lunar.linearPhase": "",
 };
 const DEFAULT_UNIT = "deg";
 
@@ -21,37 +26,68 @@ const DEFAULT_UNIT = "deg";
 // domain (sun/moon) it's under, so most entries don't need a body-specific variant.
 const DESCRIPTIONS = {
     MEAN_RADIUS_KM: "The body's mean radius, in kilometers.",
-    ATMOSPHERE_THICKNESS_KM: "The uniform-density atmosphere thickness used for simplified scattering models, in kilometers.",
-    ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: "The atmosphere thickness accounting for its actual density falloff with altitude, in kilometers.",
+    ATMOSPHERE_THICKNESS_KM:
+        "The uniform-density atmosphere thickness used for simplified scattering models, in kilometers.",
+    ATMOSPHERE_THICKNESS_NON_UNIFORM_KM:
+        "The atmosphere thickness accounting for its actual density falloff with altitude, in kilometers.",
     APPARENT_MAGNITUDE_LIMIT: "The faintest apparent magnitude generally considered visible to the naked eye.",
-    atmosphericRefraction: "How much atmospheric refraction lifts a body's apparent altitude above its true, geometric altitude.",
-    orbitEccentricity: "How far Earth's orbit around the Sun deviates from a perfect circle (0 = circular, closer to 1 = more elongated).",
+    atmosphericRefraction:
+        "How much atmospheric refraction lifts a body's apparent altitude above its true, geometric altitude.",
+    orbitEccentricity:
+        "How far Earth's orbit around the Sun deviates from a perfect circle (0 = circular, closer to 1 = more elongated).",
     apparentAngularSunDiameter: "The Sun's apparent angular width as seen from Earth, in radians.",
     apparentAngularMoonDiameter: "The Moon's apparent angular width as seen from Earth, in radians.",
-    longitudeNutation: "The small periodic wobble in the direction of the equinox, caused mainly by the Moon's pull on Earth's equatorial bulge.",
-    obliquityNutation: "The small periodic wobble in Earth's axial tilt itself, the companion effect to longitudeNutation.",
-    meanObliquity: "Earth's axial tilt relative to its orbital plane, smoothed to remove the short-term nutation wobble.",
+    longitudeNutation:
+        "The small periodic wobble in the direction of the equinox, caused mainly by the Moon's pull on Earth's equatorial bulge.",
+    obliquityNutation:
+        "The small periodic wobble in Earth's axial tilt itself, the companion effect to longitudeNutation.",
+    meanObliquity:
+        "Earth's axial tilt relative to its orbital plane, smoothed to remove the short-term nutation wobble.",
     trueObliquity: "Earth's actual axial tilt relative to its orbital plane right now, including the nutation wobble.",
-    viewDistanceWithinAtmosphere: "How far a given line of sight travels through Earth's atmosphere before leaving it, in kilometers.",
-    meanAnomaly: "How far the body has traveled along its orbit since perihelion, as if the orbit were circular and traversed at constant speed.",
+    viewDistanceWithinAtmosphere:
+        "How far a given line of sight travels through Earth's atmosphere before leaving it, in kilometers.",
+    meanAnomaly:
+        "How far the body has traveled along its orbit since perihelion, as if the orbit were circular and traversed at constant speed.",
     meanLongitude: "The body's ecliptical longitude if its orbit were circular and traversed at constant speed.",
     center: "The correction added to the Sun's mean anomaly to account for its orbit's actual, elliptical (not circular) shape.",
     trueAnomaly: "How far the body has actually traveled along its real, elliptical orbit since perihelion.",
-    trueLongitude: "The Sun's actual ecliptical longitude: meanLongitude corrected for the orbit's true elliptical shape.",
-    "apparentPosition.rightAscension": "The body's east-west sky coordinate, like celestial longitude, measured along the celestial equator from the vernal equinox.",
-    "apparentPosition.declination": "The body's north-south sky coordinate, like celestial latitude, measured from the celestial equator.",
+    trueLongitude:
+        "The Sun's actual ecliptical longitude: meanLongitude corrected for the orbit's true elliptical shape.",
+    "apparentPosition.rightAscension":
+        "The body's east-west sky coordinate, like celestial longitude, measured along the celestial equator from the vernal equinox.",
+    "apparentPosition.declination":
+        "The body's north-south sky coordinate, like celestial latitude, measured from the celestial equator.",
     "horizontalPosition.altitude": "How high the body appears above the observer's local horizon, in degrees.",
     "horizontalPosition.azimuth": "The compass-like direction of the body along the observer's local horizon.",
     distance: "Distance from Earth's center to the body's center, in kilometers.",
     meanElongation: "The Moon's mean angular separation from the Sun, as seen from Earth.",
-    meanArgumentOfLatitude: "The Moon's mean angular distance from where its orbit crosses Earth's orbital plane, its ascending node.",
-    meanAscendingNodeLongitude: "The ecliptical longitude of the point where the Moon's orbit crosses Earth's orbital plane heading north.",
-    "position.longitude": "The Moon's ecliptical longitude: its position along the ecliptic, measured from the vernal equinox.",
+    meanArgumentOfLatitude:
+        "The Moon's mean angular distance from where its orbit crosses Earth's orbital plane, its ascending node.",
+    meanAscendingNodeLongitude:
+        "The ecliptical longitude of the point where the Moon's orbit crosses Earth's orbital plane heading north.",
+    "position.longitude":
+        "The Moon's ecliptical longitude: its position along the ecliptic, measured from the vernal equinox.",
     "position.latitude": "The Moon's ecliptical latitude: how far it strays north or south of the ecliptic plane.",
-    "opticalLibrations.longitude": "How far the Moon's near side rocks east-west beyond its average-facing hemisphere, letting us see a little past its edge.",
-    "opticalLibrations.latitude": "How far the Moon's near side rocks north-south beyond its average-facing hemisphere, letting us see a little past its pole.",
-    parallacticAngle: "The angle between the Moon's north pole direction and straight up (the local zenith) as seen by the observer.",
+    "opticalLibrations.longitude":
+        "How far the Moon's near side rocks east-west beyond its average-facing hemisphere, letting us see a little past its edge.",
+    "opticalLibrations.latitude":
+        "How far the Moon's near side rocks north-south beyond its average-facing hemisphere, letting us see a little past its pole.",
+    parallacticAngle:
+        "The angle between the Moon's north pole direction and straight up (the local zenith) as seen by the observer.",
     positionAngleOfAxis: "The angle between the Moon's rotation axis and celestial north, as seen from Earth.",
+    "solar.separation": "Apparent center-to-center separation between Sun and Moon as seen by the observer.",
+    "solar.positionAngle":
+        "Direction from the Sun's center to the Moon's center in the observer's sky, from up through east.",
+    "solar.phase":
+        "0 (centered) to 1 (discs just touching), 0.5 at the total/annular-to-partial boundary; above 1 means no eclipse.",
+    "solar.linearPhase": "Same as solar.phase, but as one global linear fraction (0.5 doesn't mean the same thing).",
+    "lunar.separation": "The Moon's angular distance from the axis of Earth's shadow, as seen geocentrically.",
+    "lunar.axisOffsetKm": "The Moon's linear distance from the axis of Earth's shadow, at the Moon's own distance.",
+    "lunar.positionAngle":
+        "Direction from Earth's shadow axis to the Moon, in ecliptical degrees from north through east.",
+    "lunar.phase":
+        "0 (umbra center) to 1 (penumbra edge), 0.5 at the umbra/penumbra boundary; above 1 means no eclipse.",
+    "lunar.linearPhase": "Same as lunar.phase, but as one global linear fraction (0.5 doesn't mean the same thing).",
 };
 
 function describe(name, field) {
@@ -71,6 +107,8 @@ const CALL_OVERRIDES = {
         fn(precise.fromJulianDay(jd), Number(latitudeInput.value), Number(longitudeInput.value)),
     parallacticAngle: (fn, jd) =>
         fn(precise.fromJulianDay(jd), Number(latitudeInput.value), Number(longitudeInput.value)),
+    // lunar takes just jd like the fn(jd) default already handles; only solar needs observer location too.
+    solar: (fn, jd) => fn(precise.fromJulianDay(jd), Number(latitudeInput.value), Number(longitudeInput.value)),
 };
 
 const DECIMALS = 4;
@@ -163,7 +201,10 @@ function cell(value, present, unit) {
 function formatDelta(delta, unit) {
     const sign = delta < 0 ? "-" : "+";
     const suffix = unit === "deg" ? "°" : unit === "rad" ? " rad" : unit ? ` ${unit}` : "";
-    const formatted = Math.abs(delta).toLocaleString("en-US", { minimumFractionDigits: DECIMALS, maximumFractionDigits: DECIMALS });
+    const formatted = Math.abs(delta).toLocaleString("en-US", {
+        minimumFractionDigits: DECIMALS,
+        maximumFractionDigits: DECIMALS,
+    });
     return `Δ ${sign}${formatted}${suffix}`;
 }
 
@@ -200,7 +241,10 @@ function computeRows(domainName, names, preciseNs, approxNs, jd) {
                 return fields.map((field) => {
                     const preciseHasField = isPlainObject(preciseValue) && field in preciseValue;
                     const approxHasField = isPlainObject(approxValue) && field in approxValue;
-                    return `<tr data-domain="${domainName}" data-name="${name}" data-field="${field}"><td title="${describe(name, field)}">${name}.${field}</td><td>${unit}</td>${cell(preciseValue?.[field], preciseHasField, unit)}${approxCell(approxValue?.[field], approxHasField, unit, preciseValue?.[field], preciseHasField)}</tr>`;
+                    // Most object exports (apparentPosition, position, ...) have every field share one unit, but
+                    // eclipse states mix degrees/km/dimensionless/strings, so a "name.field" entry wins if present.
+                    const fieldUnit = UNITS[`${name}.${field}`] ?? unit;
+                    return `<tr data-domain="${domainName}" data-name="${name}" data-field="${field}"><td title="${describe(name, field)}">${name}.${field}</td><td>${fieldUnit}</td>${cell(preciseValue?.[field], preciseHasField, fieldUnit)}${approxCell(approxValue?.[field], approxHasField, fieldUnit, preciseValue?.[field], preciseHasField)}</tr>`;
                 });
             }
 
@@ -214,13 +258,18 @@ function computeRows(domainName, names, preciseNs, approxNs, jd) {
 // biome-ignore lint/performance/noDynamicNamespaceImportAccess: dev-only inspector, never bundled
 const namespacesOf = (domainName) => [precise[domainName], approx[domainName]];
 
+// tablesDiv.innerHTML is fully rebuilt on every render() (any input change), so a plain hardcoded `open`
+// would re-expand every group each time; this survives that by living outside render() entirely, updated by
+// the delegated "toggle" listener below and read back in when regenerating the markup.
+const domainOpenState = { earth: true, eclipse: true, sun: true, moon: true };
+
 function renderDomain(domainName, jd) {
     const [preciseNs, approxNs] = namespacesOf(domainName);
     const names = [...new Set([...Object.keys(preciseNs), ...Object.keys(approxNs)])].sort();
     const rows = computeRows(domainName, names, preciseNs, approxNs, jd);
 
     return `
-        <details class="domain" open>
+        <details class="domain" data-domain="${domainName}" ${domainOpenState[domainName] ? "open" : ""}>
             <summary>${domainName}</summary>
             <table>
                 <colgroup><col class="name" /><col class="unit" /><col class="value" /><col class="value" /></colgroup>
@@ -241,7 +290,7 @@ function formatJsDate(time) {
 function render() {
     const jd = Number(jdInput.value);
     calendarSpan.textContent = jd ? formatJsDate(precise.fromJulianDay(jd)) : "";
-    tablesDiv.innerHTML = ["earth", "sun", "moon"].map((domain) => renderDomain(domain, jd)).join("");
+    tablesDiv.innerHTML = ["earth", "eclipse", "sun", "moon"].map((domain) => renderDomain(domain, jd)).join("");
     // Read-only, mirrors whatever the decimal input holds; formatDMS's fixed-width padding (built for the
     // table columns) just needs trimming for a plain label.
     latitudeDmsSpan.textContent = formatDMS(Number(latitudeInput.value)).trim();
@@ -337,6 +386,17 @@ const jdMinStep = wireStepping(jdInput, jdStepSelect);
 wireStepping(latitudeInput, latitudeStepSelect, LATLONG_DECIMALS);
 wireStepping(longitudeInput, longitudeStepSelect, LATLONG_DECIMALS);
 wireStepping(altitudeInput, altitudeStepSelect, LATLONG_DECIMALS);
+
+// "toggle" doesn't bubble, but a capturing listener on an ancestor still sees it on the way down to the
+// target, so this still works delegated (rather than needing to re-bind after every innerHTML rebuild).
+tablesDiv.addEventListener(
+    "toggle",
+    (event) => {
+        const details = event.target.closest("details.domain");
+        if (details) domainOpenState[details.dataset.domain] = details.open;
+    },
+    true,
+);
 
 // Delegated on the stable container rather than per-row, so it survives tablesDiv.innerHTML being
 // rebuilt on every render() without needing to re-bind. viz.js listens for this independently.

@@ -1,5 +1,5 @@
 // See ../GLOSSARY.md for sidereal time.
-import { normalizeDegrees, radToDeg } from "./math.js";
+import { normalizeDegrees, RAD_TO_DEG } from "./math.js";
 import {
     type AstronomicalTime,
     julianCenturiesSinceStandardEquinox,
@@ -30,5 +30,5 @@ export function meanSiderealTimeApprox(time: AstronomicalTime): number {
     const T = julianCenturiesSinceStandardEquinox(jd);
     const t = 4.894961 + 230121.675315 * T;
 
-    return normalizeDegrees(radToDeg(t));
+    return normalizeDegrees(t * RAD_TO_DEG);
 }

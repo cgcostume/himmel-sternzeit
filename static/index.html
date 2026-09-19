@@ -3,18 +3,25 @@
 <head>
 <meta charset="utf-8" />
 <title>@himmel/sternzeit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Roboto+Mono:wght@300;400;700&display=swap"
+    rel="stylesheet"
+/>
 <link rel="stylesheet" href="index.css" />
 <link rel="stylesheet" href="viz.css" />
 </head>
 <body>
 
 <div class="sticky-vis">
-<div class="title-row">
-    <h1>@himmel/<strong>sternzeit</strong></h1>
-    <a href="https://github.com/cgcostume/himmel-sternzeit" target="_blank" rel="noopener">GitHub ↗</a>
-</div>
 <div id="scene">
     <svg id="stage"></svg>
+    <div class="title-row">
+        <h1>@himmel/<strong>sternzeit</strong></h1>
+        <a href="https://github.com/cgcostume/himmel-sternzeit" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+    <p class="note vis-credit footnote">Visualized with <a href="https://zzz.dog/" target="_blank" rel="noopener">Zdog</a>.</p>
 </div>
 </div>
 
@@ -36,9 +43,9 @@
         <option value="30.436875">± month</option>
         <option value="7">± week</option>
         <option value="1">± day</option>
-        <option value="0.0416666666667">± hour</option>
+        <option value="0.0416666666667" selected>± hour</option>
         <option value="0.0006944444444">± minute</option>
-        <option value="0.0000115740741" selected>± second</option>
+        <option value="0.0000115740741">± second</option>
     </select>
     <span class="input-grid-extra">
         <button id="now" type="button">now</button>

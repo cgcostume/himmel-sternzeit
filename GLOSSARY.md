@@ -90,3 +90,30 @@ readers comfortable with code but not necessarily with classical astronomy.
 - **Position angle of axis**: The angle, on the sky, between celestial north and the Moon's own north
   pole/rotation axis, needed to draw the Moon's surface features (or a lit crescent) correctly oriented
   rather than always "upright".
+- **Parallax (equatorial horizontal / topocentric position)**: The Moon is close enough (~384,000 km) that
+  its apparent position shifts noticeably (up to ~1°) depending on where on Earth's surface you're standing,
+  unlike the Sun or stars. `equatorialHorizontalParallax` is the size of that shift for an observer at
+  Earth's equator with the Moon on their horizon; `topocentricPosition` applies the actual correction for a
+  given observer, which `horizontalPosition` then uses.
+
+## Eclipses
+
+- **Eclipse phase**: Both `solarEclipseState` and `lunarEclipseState` express "how much" as a single 0-1+
+  `phase` axis rather than separate magnitude/type fields: 0 is the deepest possible eclipse (centered), 1 is
+  the outer edge of any eclipse effect at all (Sun/Moon discs just touching for a solar eclipse, the Moon at
+  the penumbra's outer edge for a lunar one), above 1 means no eclipse. 0.5 is always the boundary between the
+  "deep" zone (total/annular for solar, umbral for lunar) and the "shallow" zone (partial for solar, penumbral
+  for lunar) - fixed at 0.5 regardless of how that boundary's actual size varies eclipse to eclipse, since a
+  lookup-texture-style consumer needs a stable coordinate for it, not one that drifts with the day's actual
+  distances. This follows the phase parameterization from Limberger et al., "Single-Pass Rendering of Day and
+  Night Sky Phenomena" (VMV 2012), which defined it for lunar eclipses; the same shape (deep zone/shallow zone,
+  fixed 0.5 boundary) is applied here to solar eclipses too, which that paper didn't cover. `linearPhase` is
+  the same distance instead expressed as one global linear fraction (no fixed 0.5 anchor). Total-vs-annular
+  and umbral-vs-penumbral distinctions aren't encoded as a discrete label: compare `sun.apparentAngularDiameter`
+  vs `moon.apparentAngularDiameter` directly if that's needed. Unlike a solar eclipse, whether a lunar eclipse
+  *occurs* is the same for every observer who can see the Moon at all, a real geocentric event, not a
+  perspective effect.
+- **Position angle**: The compass-like direction from one point to another (e.g. from the Sun's center to the
+  Moon's, or from the axis of Earth's shadow to the Moon), measured in degrees from "north" through "east", so
+  that magnitude alone (how much) can be paired with position angle (which side) to actually place the
+  overlap when drawing it, not just size it.

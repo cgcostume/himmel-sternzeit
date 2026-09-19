@@ -1,5 +1,5 @@
 // See ../GLOSSARY.md for obliquity, nutation, orbital eccentricity, and atmospheric refraction.
-import { arcsecondsToDegrees, degToRad, radToDeg } from "./math.js";
+import { arcsecondsToDegrees, DEG_TO_RAD, RAD_TO_DEG } from "./math.js";
 import * as moon from "./moon.js";
 import * as sun from "./sun.js";
 import { type JulianDay, julianCenturiesSinceStandardEquinox } from "./time.js";
@@ -34,12 +34,12 @@ export function orbitEccentricityApprox(): number {
 export function longitudeNutation(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
 
-    const sM = degToRad(sun.meanAnomaly(t));
+    const sM = sun.meanAnomaly(t) * DEG_TO_RAD;
 
-    const mM = degToRad(moon.meanAnomaly(t));
-    const mD = degToRad(moon.meanElongation(t));
-    const mF = degToRad(moon.meanArgumentOfLatitude(t));
-    const O = degToRad(moon.meanAscendingNodeLongitude(t));
+    const mM = moon.meanAnomaly(t) * DEG_TO_RAD;
+    const mD = moon.meanElongation(t) * DEG_TO_RAD;
+    const mF = moon.meanArgumentOfLatitude(t) * DEG_TO_RAD;
+    const O = moon.meanAscendingNodeLongitude(t) * DEG_TO_RAD;
 
     let Dr = 0.0;
 
@@ -115,9 +115,9 @@ export function longitudeNutation(t: JulianDay): number {
  * "A Physically-Based Night Sky Model" (2001).
  */
 export function longitudeNutationApprox(t: JulianDay): number {
-    const sM = degToRad(sun.meanAnomalyApprox(t));
-    const mM = degToRad(moon.meanAnomalyApprox(t));
-    const O = degToRad(moon.meanAscendingNodeLongitudeApprox(t));
+    const sM = sun.meanAnomalyApprox(t) * DEG_TO_RAD;
+    const mM = moon.meanAnomalyApprox(t) * DEG_TO_RAD;
+    const O = moon.meanAscendingNodeLongitudeApprox(t) * DEG_TO_RAD;
 
     return (
         -arcsecondsToDegrees(17.2) * Math.sin(O) -
@@ -131,12 +131,12 @@ export function longitudeNutationApprox(t: JulianDay): number {
 export function obliquityNutation(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
 
-    const sM = degToRad(sun.meanAnomaly(t));
+    const sM = sun.meanAnomaly(t) * DEG_TO_RAD;
 
-    const mM = degToRad(moon.meanAnomaly(t));
-    const mD = degToRad(moon.meanElongation(t));
-    const mF = degToRad(moon.meanArgumentOfLatitude(t));
-    const O = degToRad(moon.meanAscendingNodeLongitude(t));
+    const mM = moon.meanAnomaly(t) * DEG_TO_RAD;
+    const mD = moon.meanElongation(t) * DEG_TO_RAD;
+    const mF = moon.meanArgumentOfLatitude(t) * DEG_TO_RAD;
+    const O = moon.meanAscendingNodeLongitude(t) * DEG_TO_RAD;
 
     let De = 0.0;
 
@@ -187,9 +187,9 @@ export function obliquityNutation(t: JulianDay): number {
  * "A Physically-Based Night Sky Model" (2001).
  */
 export function obliquityNutationApprox(t: JulianDay): number {
-    const O = degToRad(moon.meanAscendingNodeLongitudeApprox(t));
-    const Ls = degToRad(sun.meanAnomalyApprox(t));
-    const Lm = degToRad(moon.meanAnomalyApprox(t));
+    const O = moon.meanAscendingNodeLongitudeApprox(t) * DEG_TO_RAD;
+    const Ls = sun.meanAnomalyApprox(t) * DEG_TO_RAD;
+    const Lm = moon.meanAnomalyApprox(t) * DEG_TO_RAD;
 
     return (
         arcsecondsToDegrees(9.2) * Math.cos(O) +
@@ -232,7 +232,7 @@ export function meanObliquity(t: JulianDay): number {
 /** ("A Physically-Based Night Sky Model" - 2001 - Wann Jensen et al.) */
 export function meanObliquityApprox(t: JulianDay): number {
     const T = julianCenturiesSinceStandardEquinox(t);
-    return radToDeg(0.409093 - 0.000227 * T);
+    return (0.409093 - 0.000227 * T) * RAD_TO_DEG;
 }
 
 /**
@@ -241,7 +241,7 @@ export function meanObliquityApprox(t: JulianDay): number {
  * Þorsteinn Sæmundsson, "Sky and Telescope" (1982).
  */
 export function atmosphericRefraction(altitude: number): number {
-    const R = 1.02 / Math.tan(degToRad(altitude + 10.3 / (altitude + 5.11))) + 0.0019279;
+    const R = 1.02 / Math.tan((altitude + 10.3 / (altitude + 5.11)) * DEG_TO_RAD) + 0.0019279;
 
     return R / 60; // R is in arcminutes.
 }
@@ -257,7 +257,7 @@ export function viewDistanceWithinAtmosphere(y: number, refractionCorrected = fa
     // The correction avoids loss of precision in h at y = 1.0.
     let h = Math.asin(y * (1.0 - 1e-12));
 
-    if (refractionCorrected) h += degToRad(atmosphericRefraction(radToDeg(Math.asin(y))));
+    if (refractionCorrected) h += atmosphericRefraction(Math.asin(y) * RAD_TO_DEG) * DEG_TO_RAD;
 
     const cosa = Math.cos(h);
     const rt = r + t;

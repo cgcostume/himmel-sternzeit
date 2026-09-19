@@ -111,10 +111,29 @@ const earthAnchor = new Anchor({ addTo: illustration });
 // lines derived from the inputs but not themselves the result (the observer's lat/long rings); solid = the
 // actual current fact the rest exists to locate (the radius line + observer marker). Dash patterns are
 // applied via raw SVG attributes each frame in frame(), Zdog itself has no dashed/dotted-stroke option.
-const equatorRing = new Ellipse({ addTo: earthAnchor, diameter: 2 * EARTH_R, rotate: { x: Math.PI / 2 }, color: "#000", stroke: 1, fill: false });
-const axisLine = new Shape({ addTo: earthAnchor, path: [v(0, -EARTH_R, 0), v(0, EARTH_R, 0)], stroke: 1, color: "#000" });
+const equatorRing = new Ellipse({
+    addTo: earthAnchor,
+    diameter: 2 * EARTH_R,
+    rotate: { x: Math.PI / 2 },
+    color: "#000",
+    stroke: 1,
+    fill: false,
+});
+const axisLine = new Shape({
+    addTo: earthAnchor,
+    path: [v(0, -EARTH_R, 0), v(0, EARTH_R, 0)],
+    stroke: 1,
+    color: "#000",
+});
 // The observer's own latitude/meridian rings: where they are right now.
-const latitudeRing = new Ellipse({ addTo: earthAnchor, diameter: 2 * EARTH_R, rotate: { x: Math.PI / 2 }, color: "#000", stroke: 1, fill: false });
+const latitudeRing = new Ellipse({
+    addTo: earthAnchor,
+    diameter: 2 * EARTH_R,
+    rotate: { x: Math.PI / 2 },
+    color: "#000",
+    stroke: 1,
+    fill: false,
+});
 const meridianRing = new Ellipse({ addTo: earthAnchor, diameter: 2 * EARTH_R, color: "#000", stroke: 1, fill: false });
 // The radius from center to the observer: the concrete result, solid.
 const radiusLine = new Shape({ addTo: earthAnchor, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: "#000" });
@@ -133,27 +152,55 @@ const meanEclipticAxis = new Shape({ addTo: earthAnchor, path: [v(0, 0, 0), v(0,
 // axes extend through the origin in both directions (north and south pole), so the arc is mirrored too:
 // trueObliquityArc for the north side, trueObliquityArcSouth for the (identical, negated) south side.
 const trueObliquityArc = new Shape({ addTo: earthAnchor, path: [v(0, 0, 0)], closed: false, stroke: 1, color: "#000" });
-const trueObliquityArcSouth = new Shape({ addTo: earthAnchor, path: [v(0, 0, 0)], closed: false, stroke: 1, color: "#000" });
+const trueObliquityArcSouth = new Shape({
+    addTo: earthAnchor,
+    path: [v(0, 0, 0)],
+    closed: false,
+    stroke: 1,
+    color: "#000",
+});
 // meanObliquity gets no arc of its own: it differs from trueObliquity by only the nutation wobble (a few
 // arcseconds), so a second arc swept from the same 0deg baseline would sit almost perfectly on top of
 // trueObliquityArc, reading as one arc doubled/darkened rather than two distinct ones. Its own axis line is
 // enough to mark "the tilted axis"; the angle itself is read off trueObliquityArc.
-const obliquityNutationLine = new Shape({ addTo: earthAnchor, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: "#000" });
+const obliquityNutationLine = new Shape({
+    addTo: earthAnchor,
+    path: [v(0, 0, 0), v(0, 0, 0)],
+    stroke: 1,
+    color: "#000",
+});
 // Longitude nutation: the true equinox (where RA is actually measured from right now) wanders a little
 // from the mean/fixed one (our +X axis) within the equatorial plane; marked on the equator ring's surface.
-const longitudeNutationLine = new Shape({ addTo: earthAnchor, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: "#000" });
+const longitudeNutationLine = new Shape({
+    addTo: earthAnchor,
+    path: [v(0, 0, 0), v(0, 0, 0)],
+    stroke: 1,
+    color: "#000",
+});
 const trueEquinoxDot = new Shape({ addTo: earthAnchor, stroke: 3, color: "#000" });
 // Earth's (equivalently, from here, the sun's apparent) orbital ellipse, real eccentricity (~0.0167), so
 // this will read as very nearly circular, which is itself the honest answer. Centered on Earth rather than
 // offset to the correct focus: that needs the orbit's orientation (longitude of perihelion), which nothing
 // in this codebase computes, so this shows the shape/flatness, not the correct sun-at-focus positioning.
-const orbitEllipse = new Ellipse({ addTo: earthAnchor, rotate: { x: Math.PI / 2 }, color: "#000", stroke: 1, fill: false });
+const orbitEllipse = new Ellipse({
+    addTo: earthAnchor,
+    rotate: { x: Math.PI / 2 },
+    color: "#000",
+    stroke: 1,
+    fill: false,
+});
 // The atmosphere shell as a constant, always-on presence, layered on top of everything else: a single
 // billboarded circle (see billboardRotate) at the atmosphere's outer radius, rather than three fixed
 // wireframe rings, so it always reads as a clean full disc regardless of how the scene is rotated. No
 // view-distance-through-atmosphere ray visualization: that distance is too small a fraction of EARTH_R to
 // read at this scene's scale.
-const atmosphereShell = new Ellipse({ addTo: earthAnchor, diameter: ATMOSPHERE_SHELL_DIAMETER, color: PAGE_ACCENT, stroke: 1, fill: false });
+const atmosphereShell = new Ellipse({
+    addTo: earthAnchor,
+    diameter: ATMOSPHERE_SHELL_DIAMETER,
+    color: PAGE_ACCENT,
+    stroke: 1,
+    fill: false,
+});
 
 const sunAnchor = new Anchor({ addTo: illustration });
 // An outline, billboarded disc, same dotted-fixed-reference styling as atmosphereShell above, rather than
@@ -286,7 +333,10 @@ const SHAPE_MAP = {
 // frame's highlight (if any) is applied on top. The atmosphere shell rests at the page's own accent color,
 // its permanent, always-on look; everything else defaults to plain black.
 const REST_COLORS = new Map([[atmosphereShell, PAGE_ACCENT]]);
-const HIGHLIGHTABLE = [...new Set(Object.values(SHAPE_MAP).flat())].map((shape) => [shape, REST_COLORS.get(shape) ?? "#000"]);
+const HIGHLIGHTABLE = [...new Set(Object.values(SHAPE_MAP).flat())].map((shape) => [
+    shape,
+    REST_COLORS.get(shape) ?? "#000",
+]);
 
 function frame() {
     zoomFactor += (targetZoomFactor - zoomFactor) * 0.15;
@@ -329,14 +379,17 @@ function frame() {
 
     // Same rotate-the-Y-axis-by-obliquity-about-X derivation the ecliptic-plane ring used, applied to just
     // the pole direction instead of a whole ring.
-    const eclipticPoleAt = (obliquityDeg) => v(0, -Math.cos(obliquityDeg * DEG) * EARTH_R, Math.sin(obliquityDeg * DEG) * EARTH_R);
+    const eclipticPoleAt = (obliquityDeg) =>
+        v(0, -Math.cos(obliquityDeg * DEG) * EARTH_R, Math.sin(obliquityDeg * DEG) * EARTH_R);
     const truePole = eclipticPoleAt(obliquity);
     trueEclipticAxis.path[0] = vScale(truePole, -1);
     trueEclipticAxis.path[1] = truePole;
     trueEclipticAxis.updatePath();
 
     const OBLIQUITY_ARC_SEGMENTS = 16;
-    const northArcPath = Array.from({ length: OBLIQUITY_ARC_SEGMENTS + 1 }, (_, i) => eclipticPoleAt((obliquity * i) / OBLIQUITY_ARC_SEGMENTS));
+    const northArcPath = Array.from({ length: OBLIQUITY_ARC_SEGMENTS + 1 }, (_, i) =>
+        eclipticPoleAt((obliquity * i) / OBLIQUITY_ARC_SEGMENTS),
+    );
     trueObliquityArc.path = northArcPath;
     trueObliquityArc.updatePath();
     trueObliquityArcSouth.path = northArcPath.map((p) => vScale(p, -1));
@@ -378,7 +431,10 @@ function frame() {
     const sinPaa = Math.sin(paa);
     const u2 = vAdd(vScale(u, cosPaa), vScale(vAxis, sinPaa));
     const v2 = vAdd(vScale(u, -sinPaa), vScale(vAxis, cosPaa));
-    const wobble = vAdd(vScale(u2, Math.sin(libration.longitude * DEG)), vScale(v2, Math.sin(libration.latitude * DEG)));
+    const wobble = vAdd(
+        vScale(u2, Math.sin(libration.longitude * DEG)),
+        vScale(v2, Math.sin(libration.latitude * DEG)),
+    );
     const wobblePoint = vScale(vNormalize(vAdd(earthward, vScale(wobble, 1.5))), MOON_R * 0.85);
     moonFaceLine.path[1] = wobblePoint;
     moonFaceLine.updatePath();
@@ -389,7 +445,8 @@ function frame() {
     // "the whole body": that fallback used to make every earth row look like it does something, when most
     // don't draw anything specific.
     const activeShapes = (hovered && SHAPE_MAP[`${hovered.domain}.${hovered.name}`]) ?? [];
-    for (const [shape, restColor] of HIGHLIGHTABLE) shape.color = activeShapes.includes(shape) ? HIGHLIGHT_COLOR : restColor;
+    for (const [shape, restColor] of HIGHLIGHTABLE)
+        shape.color = activeShapes.includes(shape) ? HIGHLIGHT_COLOR : restColor;
 
     illustration.rotate = { x: rotX, y: rotY, z: 0 };
     illustration.updateRenderGraph();
@@ -411,7 +468,17 @@ function frame() {
     // (atmosphereShell, the earth rings, etc.), since it's worth a visually distinct line style, not
     // another dotted ring easily lost among the others.
     const dashDot = `${4 / illustration.zoom},${8 / illustration.zoom}`;
-    for (const shape of [equatorRing, axisLine, trueEclipticAxis, meanEclipticAxis, trueObliquityArc, trueObliquityArcSouth, atmosphereShell, moonDisc, sunDisc]) {
+    for (const shape of [
+        equatorRing,
+        axisLine,
+        trueEclipticAxis,
+        meanEclipticAxis,
+        trueObliquityArc,
+        trueObliquityArcSouth,
+        atmosphereShell,
+        moonDisc,
+        sunDisc,
+    ]) {
         shape.svgElement?.setAttribute("stroke-dasharray", dotDash);
         shape.svgElement?.setAttribute("stroke-linecap", "round");
     }

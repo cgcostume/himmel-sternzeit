@@ -2,6 +2,7 @@
 import * as earthImpl from "./earth.js";
 import * as moonImpl from "./moon.js";
 import * as sunImpl from "./sun.js";
+import * as eclipseImpl from "./eclipse.js";
 
 // Coordinate systems.
 export type { EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
@@ -64,10 +65,19 @@ export const moon = {
     meanAscendingNodeLongitude: moonImpl.meanAscendingNodeLongitudeApprox,
     position: moonImpl.positionApprox,
     apparentPosition: moonImpl.apparentPositionApprox,
+    equatorialHorizontalParallax: moonImpl.equatorialHorizontalParallaxApprox,
+    topocentricPosition: moonImpl.topocentricPositionApprox,
     horizontalPosition: moonImpl.horizontalPositionApprox,
     distance: moonImpl.distanceApprox,
     apparentAngularDiameter: moonImpl.apparentAngularDiameterApprox,
     opticalLibrations: moonImpl.opticalLibrationsApprox,
     parallacticAngle: moonImpl.parallacticAngleApprox,
     positionAngleOfAxis: moonImpl.positionAngleOfAxisApprox,
+};
+
+// Eclipses. Same shape as the precise `eclipse` namespace in `index.ts`.
+export type { SolarEclipseState, LunarEclipseState } from "./eclipse.js";
+export const eclipse = {
+    solar: eclipseImpl.solarEclipseStateApprox,
+    lunar: eclipseImpl.lunarEclipseStateApprox,
 };
