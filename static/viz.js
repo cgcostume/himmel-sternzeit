@@ -30,29 +30,9 @@ const PAGE_ACCENT = getComputedStyle(document.documentElement).getPropertyValue(
 function v(x, y, z) {
     return { x, y, z };
 }
-function vAdd(a, b) {
-    return v(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-function vSub(a, b) {
-    return v(a.x - b.x, a.y - b.y, a.z - b.z);
-}
 function vScale(a, s) {
     return v(a.x * s, a.y * s, a.z * s);
 }
-function vDot(a, b) {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-function vCross(a, b) {
-    return v(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
-}
-function vNormalize(a) {
-    const len = Math.hypot(a.x, a.y, a.z) || 1;
-    return vScale(a, 1 / len);
-}
-// Celestial north in this scene's frame (see sphericalToVector's comment: +dec is -Y). Projecting this onto
-// the plane perpendicular to the current camera direction (see frame() below) gives a stable "up" for
-// moonAxisLine that varies smoothly as the scene is rotated, unlike billboardRotate's arbitrary twist.
-const NORTH = v(0, -1, 0);
 
 // Earth-centered equatorial frame: RA=0/dec=0 is the +X axis, the celestial equator is the XZ plane,
 // +dec is -Y (Zdog is screen-convention y-down, so "up"/north is negative y). Used for every body
@@ -255,17 +235,140 @@ const moonDisc = new Ellipse({
     fill: false,
 });
 const moonCenterDot = new Shape({ addTo: moonAnchor, stroke: 3, color: "#000" });
-// The Moon's rotation axis, mirroring earthAnchor's axisLine, but built differently: this codebase doesn't
-// carry the Moon's full 3D orientation the way it does Earth's (obliquity/nutation give real ecliptic-frame
-// vectors), only positionAngleOfAxis (P), Meeus' as-seen-from-Earth angle between the projected axis and the
-// lunar disk's north point, measured eastward. P already folds in both the Moon's small (~1.54 degree)
-// equator inclination and its libration-driven wobble over time, so rather than reconstruct a full 3D
-// vector, this line is anchored to celestial north projected onto the sky plane at the Moon's position (see
-// frame() below), then rotated within that plane by P: this is deliberately NOT the disc's own billboard
-// rotation (see billboardRotate above), whose in-plane twist is an arbitrary side effect of rotateToFace's
-// derivation, not a stable reference direction; using it here made the axis visibly spin as the scene was
-// dragged, with no relation to anything real.
-const moonAxisLine = new Shape({ addTo: moonAnchor, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: "#000" });
+
+// Two small, flat (never rotated), transparent alt-az panels overlaid directly on top of the main scene:
+// each anchors one body to x=0 (its own azimuth origin) and plots the other offset by azimuth difference,
+// both against a fixed horizon line. Both axes use a tangent (rectilinear) mapping rather than a plain
+// angle-linear one, the same distortion an ordinary (non-fisheye) camera lens has: positions stretch
+// increasingly as they approach 90 degrees from the vertical/horizontal center, instead of spreading evenly
+// by raw degrees. The horizon itself stays put regardless of either body's altitude: it's a fixed reference
+// the tangent mapping is built around (see ALTAZ_LOOK_UP_DEG below for exactly where).
+const ALTAZ_PANEL_SIZE = 140;
+// A true tangent mapping can't reach 180 degrees (tan blows up at 90), so this picks a moderate wide-lens
+// angle instead; shown in each panel's caption (see makeAltAzPanel) so the scale is never left to guess at.
+const ALTAZ_FIELD_OF_VIEW_DEG = 120;
+// The vertical half of that FOV is tilted up by this much rather than centered on the horizon: the zenith
+// (altitude 90) is worth seeing (the sun/moon is often high up), while the sky far below the horizon (the
+// unlit side of the world an observer never looks at) isn't. 30 up + 90 down from that shifted center covers
+// -30 to +90 altitude, the same 120 degrees total, just spent where it's actually useful.
+const ALTAZ_LOOK_UP_DEG = 30;
+const ALTAZ_FOCAL_PX = ALTAZ_PANEL_SIZE / 2 / Math.tan((ALTAZ_FIELD_OF_VIEW_DEG / 2) * DEG);
+
+// Tangent (rectilinear) mapping of a single axis: 0 stays at 0 (tan(0)=0), and the further from center, the
+// more a fixed number of remaining degrees pushes the point outward, same as a real camera lens. Independent
+// per axis (not a joint spherical projection): that's what keeps the horizon exactly fixed (at a height that
+// depends only on the constant ALTAZ_LOOK_UP_DEG, never on either body's actual altitude), rather than tying
+// it to the anchor's own direction.
+//
+// tan() has period 180 degrees, so past +/-90 it starts producing the SAME values it gave for angles 180
+// degrees smaller (tan(-157) equals tan(23)): without the clamp below, a body nearly opposite the panel's
+// center would wrap around and render as if it were nearly on top of it, exactly backwards. Anything at or
+// past 90 degrees off-axis is outside any real camera's field of view anyway, so it's parked far off-panel.
+function tangentPx(degreesFromCenter) {
+    if (Math.abs(degreesFromCenter) >= 90) return Math.sign(degreesFromCenter || 1) * 1e5;
+    return Math.tan(degreesFromCenter * DEG) * ALTAZ_FOCAL_PX;
+}
+// The horizon's fixed screen height, in panel-local pixels (0 = panel center, positive = downward): reused
+// both to draw the horizon line itself and to place the caption below it (see makeAltAzPanel).
+const ALTAZ_HORIZON_Y = -tangentPx(-ALTAZ_LOOK_UP_DEG);
+const ALTAZ_DOT_DIAMETER = 10;
+// Mini versions of the main scene's sunrays (see SUN_RAY_COUNT above): cheaper to read at a glance than an
+// "S"/"M" text label, and reuses a motif the viewer already knows means "this one's the sun" from the main
+// scene, rather than introducing a new convention.
+const ALTAZ_SUN_RAY_COUNT = 8;
+const ALTAZ_SUN_RAY_GAP = 3;
+const ALTAZ_SUN_RAY_LENGTH = 5;
+
+// A fixed per-species look, regardless of anchor/other role: the sun is a solid-outlined, unfilled ring plus
+// rays (below); the moon is a plain solid black disc. The anchor/other role is instead legible from position
+// alone (the anchor always sits at dead-center, see updateAltAzPanel), so it doesn't need its own styling too.
+function makeAltAzDot(panelIllustration, isSun) {
+    const dot = new Ellipse({
+        addTo: panelIllustration,
+        diameter: ALTAZ_DOT_DIAMETER,
+        color: "#000",
+        stroke: 1,
+        fill: !isSun,
+    });
+    const rays = isSun
+        ? Array.from(
+              { length: ALTAZ_SUN_RAY_COUNT },
+              () => new Shape({ addTo: panelIllustration, path: [v(0, 0, 0), v(0, 0, 0)], stroke: 1, color: "#000" }),
+          )
+        : [];
+    return { dot, rays, isSun };
+}
+
+function makeAltAzPanel(elementSelector, anchorIsSun) {
+    // Appended here (not hardcoded in index.html) so the caption can never drift out of sync with
+    // ALTAZ_FIELD_OF_VIEW_DEG above.
+    const caption = document.querySelector(elementSelector).closest(".altaz-panel")?.querySelector(".altaz-caption");
+    if (caption) {
+        caption.textContent += ` (${ALTAZ_FIELD_OF_VIEW_DEG}° FOV)`;
+        // Directly below the horizon line itself (a small fixed gap under it), in the part of the view below
+        // the ground, the least useful part of the picture (an observer never looks there), so the caption
+        // goes where it displaces the least without drifting far from the line it's labeling.
+        const horizonTopPercent = ((ALTAZ_PANEL_SIZE / 2 + ALTAZ_HORIZON_Y) / ALTAZ_PANEL_SIZE) * 100;
+        caption.style.top = `calc(${horizonTopPercent}% + 0.3rem)`;
+    }
+    const panelIllustration = new Illustration({ element: elementSelector, zoom: 1 });
+    panelIllustration.setSize(ALTAZ_PANEL_SIZE, ALTAZ_PANEL_SIZE);
+    // Fixed forever at this height (see ALTAZ_LOOK_UP_DEG above): unlike the two dots, never touched in
+    // updateAltAzPanel. PAGE_ACCENT rather than black: the one line in these panels worth calling out as
+    // "the ground", distinct from the two bodies.
+    const horizon = new Shape({
+        addTo: panelIllustration,
+        path: [v(-1e5, ALTAZ_HORIZON_Y, 0), v(1e5, ALTAZ_HORIZON_Y, 0)],
+        stroke: 1,
+        color: PAGE_ACCENT,
+    });
+    // The sun's shapes are always added before the moon's, regardless of which one plays anchor/other in
+    // this panel, so the moon renders on top whenever the two nearly overlap (an occultation/eclipse should
+    // show the moon in front), not whichever body happens to be this panel's anchor.
+    const sunDot = makeAltAzDot(panelIllustration, true);
+    const moonDot = makeAltAzDot(panelIllustration, false);
+    const anchor = anchorIsSun ? sunDot : moonDot;
+    const other = anchorIsSun ? moonDot : sunDot;
+    return { illustration: panelIllustration, horizon, anchor, other };
+}
+const sunView = makeAltAzPanel("#sunView", true);
+const moonView = makeAltAzPanel("#moonView", false);
+
+// Signed azimuth difference wrapped to [-180, 180]: the shorter way around the compass, so a moon just west
+// of due north relative to a sun just east of it reads as a small gap, not a ~360-degree one.
+function azimuthDelta(fromAzimuth, toAzimuth) {
+    return ((((toAzimuth - fromAzimuth) % 360) + 540) % 360) - 180;
+}
+
+function updateAltAzDotRays(dotEntry, center) {
+    if (dotEntry.rays.length === 0) return;
+    const inner = ALTAZ_DOT_DIAMETER / 2 + ALTAZ_SUN_RAY_GAP;
+    const outer = inner + ALTAZ_SUN_RAY_LENGTH;
+    dotEntry.rays.forEach((ray, i) => {
+        const angle = (i / dotEntry.rays.length) * 2 * Math.PI;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        ray.path = [
+            v(center.x + inner * cosA, center.y + inner * sinA, 0),
+            v(center.x + outer * cosA, center.y + outer * sinA, 0),
+        ];
+        ray.updatePath();
+    });
+}
+
+function updateAltAzPanel(panel, anchorHorizontal, otherHorizontal) {
+    // Anchor: x=0 by construction (it defines this panel's azimuth origin); y from its own true altitude
+    // (shifted by ALTAZ_LOOK_UP_DEG, same as the horizon), tangent-mapped like everything else, so it moves
+    // like any other point, not locked to panel center.
+    const anchorPoint = { x: 0, y: -tangentPx(anchorHorizontal.altitude - ALTAZ_LOOK_UP_DEG) };
+    const dAz = azimuthDelta(anchorHorizontal.azimuth, otherHorizontal.azimuth);
+    const otherPoint = { x: tangentPx(dAz), y: -tangentPx(otherHorizontal.altitude - ALTAZ_LOOK_UP_DEG) };
+    panel.anchor.dot.translate = anchorPoint;
+    panel.other.dot.translate = otherPoint;
+    updateAltAzDotRays(panel.anchor, anchorPoint);
+    updateAltAzDotRays(panel.other, otherPoint);
+    panel.illustration.updateRenderGraph();
+}
 
 // Zdog's SVG renderer scales stroke-width along with everything else in the viewBox (see the zoom comment
 // above illustration's declaration): a stroke of `n` at zoom=1 renders as `n*zoom` screen pixels, so line
@@ -294,7 +397,6 @@ const ALL_SHAPES = [
     ...sunRays,
     moonDisc,
     moonCenterDot,
-    moonAxisLine,
 ];
 const BASE_STROKE = new Map(ALL_SHAPES.map((shape) => [shape, shape.stroke]));
 
@@ -370,7 +472,6 @@ const SHAPE_MAP = {
     "sun.distance": [sunDisc, ...sunRays],
     "moon.apparentPosition": [moonCenterDot],
     "moon.distance": [moonDisc],
-    "moon.positionAngleOfAxis": [moonAxisLine],
 };
 // Every highlightable shape, paired with its resting (non-hovered) color, restored each frame before that
 // frame's highlight (if any) is applied on top. The atmosphere shell rests at the page's own accent color,
@@ -402,6 +503,11 @@ function frame() {
     const observerRa = siderealTime + longitude;
     const observerPos = sphericalToVector(observerRa, latitude, EARTH_R);
 
+    const sunHorizontal = precise.sun.horizontalPosition(time, latitude, longitude);
+    const moonHorizontal = precise.moon.horizontalPosition(time, latitude, longitude);
+    updateAltAzPanel(sunView, sunHorizontal, moonHorizontal);
+    updateAltAzPanel(moonView, moonHorizontal, sunHorizontal);
+
     sunAnchor.translate = sunPos;
     sunDisc.rotate = billboardRotate(rotX, rotY);
     sunDisc.diameter = APPARENT_SIZE_SCALE * precise.sun.apparentAngularDiameter(jd) * precise.RAD_TO_DEG;
@@ -420,21 +526,6 @@ function frame() {
     moonDisc.rotate = billboardRotate(rotX, rotY);
     moonDisc.diameter = APPARENT_SIZE_SCALE * precise.moon.apparentAngularDiameter(jd) * precise.RAD_TO_DEG;
     moonDisc.updatePath();
-    const moonAxisHalfLength = moonDisc.diameter / 2;
-    const positionAngleOfAxis = precise.moon.positionAngleOfAxis(jd);
-    // Camera direction: same target billboardRotate points shapes' local +Z at (see its comment), so this is
-    // the real-world direction that ends up screen-facing once the scene's own rotX/rotY rotation applies.
-    const cosRotX = Math.cos(rotX);
-    const cameraDir = v(cosRotX * Math.sin(rotY), Math.sin(rotX), cosRotX * Math.cos(rotY));
-    // Celestial north, projected onto the plane of the sky (perpendicular to cameraDir): a stable "up" that
-    // rotates continuously with the scene instead of billboardRotate's arbitrary in-plane twist.
-    const northOnSky = vNormalize(vSub(NORTH, vScale(cameraDir, vDot(NORTH, cameraDir))));
-    const paa = positionAngleOfAxis * DEG;
-    // Rotate northOnSky by P (eastward, per Meeus) about cameraDir; northOnSky ⟂ cameraDir already, so the
-    // Rodrigues formula's third term (which needs that dot product) drops out.
-    const axisDir = vAdd(vScale(northOnSky, Math.cos(paa)), vScale(vCross(cameraDir, northOnSky), Math.sin(paa)));
-    moonAxisLine.path = [vScale(axisDir, -moonAxisHalfLength), vScale(axisDir, moonAxisHalfLength)];
-    moonAxisLine.updatePath();
     atmosphereShell.rotate = billboardRotate(rotX, rotY);
     // observerPos already has magnitude EARTH_R (sphericalToVector's radius arg), so this only needs a
     // plain 1.02x nudge above the surface, not a divide-by-EARTH_R (that previously collapsed the whole
@@ -537,6 +628,14 @@ function frame() {
     orbitEllipse.svgElement?.setAttribute("stroke-linecap", "round");
     latitudeRing.svgElement?.setAttribute("stroke-dasharray", lineDash);
     meridianRing.svgElement?.setAttribute("stroke-dasharray", lineDash);
+
+    // The alt-az panels have their own fixed zoom (never changes, see makeAltAzPanel), so their dash lengths
+    // need no zoom-compensation the way the main scene's dotDash/lineDash above do. Only the sun's rays are
+    // dashed; both dots are always solid outlines now (see makeAltAzDot).
+    for (const panel of [sunView, moonView]) {
+        for (const ray of panel.anchor.rays) ray.svgElement?.setAttribute("stroke-dasharray", "0.1,3");
+        for (const ray of panel.other.rays) ray.svgElement?.setAttribute("stroke-dasharray", "0.1,3");
+    }
 
     requestAnimationFrame(frame);
 }

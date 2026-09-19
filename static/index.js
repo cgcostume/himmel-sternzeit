@@ -286,10 +286,17 @@ function renderDomain(domainName, jd) {
 }
 
 // fromJulianDay(jd) always comes back with utcOffsetSeconds: 0 (see the CALL_OVERRIDES comment above), i.e.
-// UT, so an ISO string with a "Z" suffix is exact, not an approximation, pasteable straight into `new Date(...)`.
+// UT; shown here in the viewer's own local timezone (more readable than raw UT) rather than as a plain "Z"
+// string. Embedding the local offset explicitly (not just local wall-clock digits with no suffix) keeps the
+// pasted `new Date(...)` exact regardless of which machine's timezone later evaluates it.
 function formatJsDate(time) {
+    const utcMs = Date.UTC(time.year, time.month - 1, time.day, time.hour, time.minute, time.second);
+    const local = new Date(utcMs);
     const pad = (n) => String(n).padStart(2, "0");
-    return `new Date("${time.year}-${pad(time.month)}-${pad(time.day)}T${pad(time.hour)}:${pad(time.minute)}:${pad(time.second)}.000Z")`;
+    const offsetMinutes = -local.getTimezoneOffset();
+    const offsetSign = offsetMinutes >= 0 ? "+" : "-";
+    const offset = `${offsetSign}${pad(Math.floor(Math.abs(offsetMinutes) / 60))}:${pad(Math.abs(offsetMinutes) % 60)}`;
+    return `new Date("${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}T${pad(local.getHours())}:${pad(local.getMinutes())}:${pad(local.getSeconds())}.000${offset}")`;
 }
 
 function render() {
