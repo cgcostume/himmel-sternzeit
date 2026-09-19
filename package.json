@@ -1,6 +1,7 @@
 {
     "name": "@himmel/sternzeit",
     "version": "0.1.0",
+    "packageManager": "pnpm@11.20.0",
     "description": "Sidereal time and astronomical position math (sun, moon, stars) for sky rendering, a TypeScript port of osgHimmel's astronomy core, with no rendering dependencies.",
     "type": "module",
     "license": "MIT",

@@ -84,8 +84,9 @@ col.unit { width: 8%; }
 col.value { width: 29%; }
 th.value, td.value { text-align: right; padding-right: 1rem; white-space: pre; }
 td.missing { opacity: 0.4; }
-/* Only the export-name cell ever gets a title attribute (see describe() in index.js), so this alone is
-   enough to target it, no need to also scope by column. */
+/* Applies to both the export-name cell (see describe() in index.js) and the approx-column value cell
+   (see approxCell()'s delta-to-precise tooltip), no need to scope by column since both mean "hover for
+   more". */
 td[title] { text-decoration: underline dotted #999; cursor: help; text-underline-offset: 3px; }
 tr:nth-child(even) { background: #f7f7f7; }
 tbody tr:hover { background: color-mix(in srgb, var(--accent) 10%, #fff); }

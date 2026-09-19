@@ -157,6 +157,26 @@ function cell(value, present, unit) {
     return present ? `<td class="value">${formatValue(value, unit)}</td>` : `<td class="value missing">—</td>`;
 }
 
+// Delta as a signed, fixed-decimal value with the row's own unit suffix, e.g. "Δ +0.0004°". Kept as a plain
+// signed decimal rather than formatNumber's full DMS breakdown: a tooltip is for "how far off is this",
+// not a value to read precision out of.
+function formatDelta(delta, unit) {
+    const sign = delta < 0 ? "-" : "+";
+    const suffix = unit === "deg" ? "°" : unit === "rad" ? " rad" : unit ? ` ${unit}` : "";
+    const formatted = Math.abs(delta).toLocaleString("en-US", { minimumFractionDigits: DECIMALS, maximumFractionDigits: DECIMALS });
+    return `Δ ${sign}${formatted}${suffix}`;
+}
+
+// Same as cell(), but for the approx column: adds a title tooltip showing the delta to the precise value,
+// so the value cells themselves stay plain numbers (not replaced by the delta), while the "how far off" is
+// still a hover away.
+function approxCell(value, present, unit, preciseValue, precisePresent) {
+    if (!present) return `<td class="value missing">—</td>`;
+    const hasDelta = precisePresent && typeof value === "number" && typeof preciseValue === "number";
+    const title = hasDelta ? ` title="${formatDelta(value - preciseValue, unit)}"` : "";
+    return `<td class="value"${title}>${formatValue(value, unit)}</td>`;
+}
+
 // data-domain/data-name/data-field identify each row for the hover -> visualization link (see the
 // "inspector:hover" CustomEvent dispatched below); viz.js listens for it independently, no import between them.
 function computeRows(domainName, names, preciseNs, approxNs, jd) {
@@ -180,12 +200,12 @@ function computeRows(domainName, names, preciseNs, approxNs, jd) {
                 return fields.map((field) => {
                     const preciseHasField = isPlainObject(preciseValue) && field in preciseValue;
                     const approxHasField = isPlainObject(approxValue) && field in approxValue;
-                    return `<tr data-domain="${domainName}" data-name="${name}" data-field="${field}"><td title="${describe(name, field)}">${name}.${field}</td><td>${unit}</td>${cell(preciseValue?.[field], preciseHasField, unit)}${cell(approxValue?.[field], approxHasField, unit)}</tr>`;
+                    return `<tr data-domain="${domainName}" data-name="${name}" data-field="${field}"><td title="${describe(name, field)}">${name}.${field}</td><td>${unit}</td>${cell(preciseValue?.[field], preciseHasField, unit)}${approxCell(approxValue?.[field], approxHasField, unit, preciseValue?.[field], preciseHasField)}</tr>`;
                 });
             }
 
             return [
-                `<tr data-domain="${domainName}" data-name="${name}"><td title="${describe(name)}">${name}</td><td>${unit}</td>${cell(preciseValue, hasPrecise, unit)}${cell(approxValue, hasApprox, unit)}</tr>`,
+                `<tr data-domain="${domainName}" data-name="${name}"><td title="${describe(name)}">${name}</td><td>${unit}</td>${cell(preciseValue, hasPrecise, unit)}${approxCell(approxValue, hasApprox, unit, preciseValue, hasPrecise)}</tr>`,
             ];
         })
         .join("");
