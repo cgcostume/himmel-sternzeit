@@ -7,13 +7,15 @@ test("earth.meanObliquity matches the standard J2000.0 value (23°26'21.448\")",
 });
 
 test("earth.orbitEccentricityApprox is the constant from the approximate model", () => {
-    expect(approx.earth.orbitEccentricity()).toBeCloseTo(0.01671022, 8);
+    expect(approx.earth.orbitEccentricity(precise.J2000)).toBeCloseTo(0.01671022, 8);
 });
 
-test("precise and approx sun/moon namespaces expose the same call sites", () => {
+test("precise and approx earth/sun/moon namespaces expose the same call sites", () => {
     // Same date, different accuracy: switching the import should be the only thing that changes.
     const t = precise.J2000;
 
+    expect(typeof precise.earth.orbitEccentricity(t)).toBe("number");
+    expect(typeof approx.earth.orbitEccentricity(t)).toBe("number");
     expect(typeof precise.sun.apparentPosition(t).rightAscension).toBe("number");
     expect(typeof approx.sun.apparentPosition(t).rightAscension).toBe("number");
     expect(typeof precise.moon.apparentPosition(t).declination).toBe("number");

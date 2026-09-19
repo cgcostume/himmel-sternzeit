@@ -25,8 +25,9 @@ export function orbitEccentricity(t: JulianDay): number {
     return 0.01670862 + T * (-0.000042037 + T * (-0.0000001236 + T * 0.00000000004));
 }
 
-/** http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html */
-export function orbitEccentricityApprox(): number {
+/** Constant regardless of `t` in this approximation; kept as a parameter to match `orbitEccentricity`'s
+ *  shape so switching the import is the only thing a caller has to change. http://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html */
+export function orbitEccentricityApprox(_t: JulianDay): number {
     return 0.01671022;
 }
 
