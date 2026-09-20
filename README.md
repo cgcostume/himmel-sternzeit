@@ -16,11 +16,16 @@ New to terms like nutation, obliquity, or libration? See [GLOSSARY.md](./GLOSSAR
 
 Julian Day conversions, mean sidereal time, and Sun/Moon/Earth position math
 (coordinates, orbital elements, nutation, apparent position, distance,
-libration, parallactic angle) are implemented, each with a precise (Meeus)
-and a cheaper approximate (Jensen et al.) variant; see `.` vs. `./approx` in
-`package.json#exports`. The bright star catalog is checked in
-(`src/data/`), but apparent star position (accounting for proper motion and
-precession) isn't implemented yet.
+libration, parallactic angle, atmospheric refraction in both directions) are
+implemented, each with a precise (Meeus) and a cheaper approximate (Jensen
+et al.) variant; see `.` vs. `./approx` in `package.json#exports`. The bright
+star catalog is checked in (`src/data/`), but there is no star API yet.
+
+Stars are next, and the reason the package is named `sternzeit` at all:
+apparent position (proper motion and precession of the J2000 catalog
+coordinates), the B-V to color-temperature to sRGB colorimetry, apparent
+magnitude to linear radiance, and an optionally importable loader for the
+~290 KB binary catalog. `src/stars.ts` sketches the intended surface.
 
 ## References
 
@@ -40,7 +45,10 @@ The primary sources cited throughout the code (see individual function docstring
   [Sun](http://nssdc.gsfc.nasa.gov/planetary/factsheet/sunfact.html) — mean radii and similar constants.
 - P. Bretagnon, *Théorie du mouvement de l'ensemble des planètes. Solution VSOP82* (1982) — Earth's orbital eccentricity.
 - G. G. Bennett, "The Calculation of the Astronomical Refraction in Marine Navigation" (1982), and
-  Þorsteinn Sæmundsson, *Sky and Telescope* (1982) — atmospheric refraction.
+  Þorsteinn Sæmundsson, *Sky and Telescope* (1982) — atmospheric refraction. Meeus gives both directions as
+  separate empirical fits: 15.3 takes apparent altitude to refraction (`atmosphericRefractionFromApparent`,
+  what a renderer warping a camera ray needs), 15.4 takes true altitude (`atmosphericRefraction`). They differ
+  by ~5' at the horizon and are not interchangeable.
 - T. Nishita, T. Sirai, K. Tadamura, E. Nakamae, "Display of the Earth Taking into Account Atmospheric
   Scattering" (SIGGRAPH 1993), and E. Bruneton, F. Neyret, "Precomputed Atmospheric Scattering" (2008) —
   atmosphere thickness constant.
@@ -57,6 +65,6 @@ pnpm typecheck   # tsc --noEmit
 pnpm lint        # biome check .
 pnpm format      # biome format --write .
 pnpm test        # playwright test
-pnpm start       # serves the dev inspector at localhost:4173/static/index.html (needs pnpm build first)
+pnpm start       # sirv: serves the dev inspector at localhost:4173/static/index.html (needs pnpm build first)
 pnpm clean       # rm -rf dist
 ```

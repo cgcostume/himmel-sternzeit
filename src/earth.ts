@@ -236,15 +236,80 @@ export function meanObliquityApprox(t: JulianDay): number {
     return (0.409093 - 0.000227 * T) * RAD_TO_DEG;
 }
 
+/** Pressure scale height of the international standard atmosphere, in meters: R·T₀ / (M·g) at 288.15 K. */
+export const PRESSURE_SCALE_HEIGHT_M = 8434.5;
+
+/**
+ * Air pressure at a given height above sea level, relative to the sea-level pressure (so 1 at h = 0), per the
+ * barometric formula for the international standard atmosphere. This is what scales refraction with height:
+ * thinner air bends light less, which is why a body's apparent position gets closer to its true one the
+ * higher the observer is, and why refraction vanishes at the top of the atmosphere.
+ */
+export function airPressureRatio(observerHeightM: number): number {
+    return Math.exp(-observerHeightM / PRESSURE_SCALE_HEIGHT_M);
+}
+
+/** Local conditions at the observer. Both default to the ones Bennett's formula itself assumes. */
+export interface RefractionConditions {
+    /** Observer height above sea level, in meters (not to be confused with `altitude`, a sky angle). */
+    observerHeightM?: number;
+    /** Local air temperature, in degrees Celsius. */
+    temperatureC?: number;
+}
+
 /**
  * Effect of atmospheric refraction on the true altitude, in degrees, per Meeus' "Astronomical Algorithms" (15.4),
  * G.G. Bennet, "The Calculation of the Astronomical Refraction in marine Navigation" (1982), and
  * Þorsteinn Sæmundsson, "Sky and Telescope" (1982).
+ *
+ * Bennett's fit assumes an observer at sea level at 10 °C; `conditions` scales the result for anything else
+ * (AA.15, the P/1010 · 283/(273+T) factor, with the pressure ratio taken from `airPressureRatio`). Strictly,
+ * refraction is the integral of the refractive index gradient along the whole ray, not a function of the
+ * conditions at one end of it, but scaling by the observer's pressure is the standard approximation.
+ *
+ * Takes the *true* (geometric) altitude, i.e. AA.15.4. Use `atmosphericRefractionFromApparent` for the other
+ * direction; the two fits differ by ~5' at the horizon and are not interchangeable.
+ *
+ * Note this is unrelated to the scattering coefficients a renderer uses: refraction comes from air's
+ * refractive index, absorption and scattering from its cross-sections, and neither follows from the other.
  */
-export function atmosphericRefraction(altitude: number): number {
+export function atmosphericRefraction(altitude: number, conditions: RefractionConditions = {}): number {
+    // The constant zeroes R at the zenith, which the bare fit misses by ~0.0019'.
     const R = 1.02 / Math.tan((altitude + 10.3 / (altitude + 5.11)) * DEG_TO_RAD) + 0.0019279;
 
-    return R / 60; // R is in arcminutes.
+    return (R / 60) * refractionConditionFactor(conditions); // R is in arcminutes.
+}
+
+/**
+ * Effect of atmospheric refraction, in degrees, as a function of the *apparent* altitude it produced, per
+ * Meeus' "Astronomical Algorithms" (15.3) and G.G. Bennet, "The Calculation of the Astronomical Refraction in
+ * marine Navigation" (1982). The inverse relation of `atmosphericRefraction`, and the one a renderer wants,
+ * since a camera ray is by definition an apparent direction: subtracting this from the ray's apparent altitude
+ * gives the true altitude to look the sky up at. `@himmel/dunstkreis` carries a WGSL twin for per-ray use on
+ * the GPU; the two are pinned to each other by a test and must stay in sync.
+ *
+ * ~34.5' at the horizon, slightly more than the Sun's own ~32' apparent diameter, which is why a Sun that
+ * looks like it is touching the horizon has geometrically already set.
+ *
+ * Meeus' fit is stated for apparent altitudes of 0 and above, and diverges below (it has a pole at -4.4°), so
+ * the input is clamped at 0. Rays below the horizontal therefore all get the horizon value; they are either
+ * ground or, for an elevated observer, within ~1° of the horizon, where that is a good approximation anyway.
+ */
+export function atmosphericRefractionFromApparent(
+    apparentAltitude: number,
+    conditions: RefractionConditions = {},
+): number {
+    const h = Math.max(apparentAltitude, 0);
+
+    // As in AA.15.4 above, the constant zeroes R at the zenith rather than leaving the fit's ~-0.0014' there.
+    const R = 1 / Math.tan((h + 7.31 / (h + 4.4)) * DEG_TO_RAD) + 0.0013515216737563;
+
+    return (R / 60) * refractionConditionFactor(conditions); // R is in arcminutes.
+}
+
+/** The AA.15 `P/1010 · 283/(273+T)` scaling shared by both fits, as a plain multiplier that is 1 by default. */
+function refractionConditionFactor({ observerHeightM = 0, temperatureC = 10 }: RefractionConditions): number {
+    return airPressureRatio(observerHeightM) * (283 / (273 + temperatureC));
 }
 
 /**

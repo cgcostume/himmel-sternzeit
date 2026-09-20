@@ -16,6 +16,7 @@ export {
 
 // Coordinate systems.
 export type { EclipticalCoords, EquatorialCoords, HorizontalCoords } from "./coords.js";
+export type { RefractionConditions } from "./earth.js";
 export { eclipticalToEquatorial, equatorialToHorizontal } from "./coords.js";
 
 // Time and Julian Day.
@@ -41,7 +42,10 @@ export const earth = {
     ATMOSPHERE_THICKNESS_KM: earthImpl.ATMOSPHERE_THICKNESS_KM,
     ATMOSPHERE_THICKNESS_NON_UNIFORM_KM: earthImpl.ATMOSPHERE_THICKNESS_NON_UNIFORM_KM,
     APPARENT_MAGNITUDE_LIMIT: earthImpl.APPARENT_MAGNITUDE_LIMIT,
+    PRESSURE_SCALE_HEIGHT_M: earthImpl.PRESSURE_SCALE_HEIGHT_M,
+    airPressureRatio: earthImpl.airPressureRatio,
     atmosphericRefraction: earthImpl.atmosphericRefraction,
+    atmosphericRefractionFromApparent: earthImpl.atmosphericRefractionFromApparent,
     orbitEccentricity: earthImpl.orbitEccentricity,
     longitudeNutation: earthImpl.longitudeNutation,
     obliquityNutation: earthImpl.obliquityNutation,
