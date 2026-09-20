@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>@himmel/sternzeit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>@himmel/sternzeit - astronomical position math for sky rendering</title>
+<meta
+    name="description"
+    content="Where the Sun, the Moon and the stars actually are, for any moment and any place on Earth. A dependency-free TypeScript library of astronomical position math for sky rendering, ported from osgHimmel."
+/>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
@@ -37,12 +42,19 @@
 
 <div class="page">
 
+<p class="lead">
+    Where the Sun, the Moon and the stars actually are, for any moment and any place on Earth. A dependency-free
+    TypeScript library of astronomical position math, ported from
+    <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>, for renderers
+    that want a sky which matches the real one.
+</p>
 <p class="note">
-    Local dev tool only, not part of the package build. Requires <code>pnpm build</code> to have run first
-    (loads <code>../dist/index.js</code> and <code>../dist/approx.js</code> directly), and must be served over
-    http, not opened as a <code>file://</code> URL (ES module imports are blocked there). Not to scale: earth/sun/moon
-    sizes and distances above are chosen for visibility, not physical proportion. Drag to rotate, scroll to zoom.
-    Hover a row in the tables below to highlight what it corresponds to above.
+    This page is a live inspector for the library: pick a time and a place, and every value it computes is
+    listed below and drawn above. Each quantity comes in a precise variant, following Meeus' <em>Astronomical
+    Algorithms</em>, and a cheaper approximate one, following Jensen et al.; both are shown side by side so the
+    cost of the shortcut is visible. Drag the scene to rotate, scroll to zoom, and hover a row in the tables to
+    highlight what it corresponds to. The scene is not to scale: sizes and distances are chosen for legibility,
+    not physical proportion.
 </p>
 
 <div class="input-grid">
@@ -103,6 +115,26 @@
 </p>
 
 <div id="tables"></div>
+
+<footer class="family">
+    <p class="footnote">
+        Part of <strong>himmel</strong>, a family of small, independent, composable libraries for rendering the
+        sky, each usable on its own:
+    </p>
+    <ul class="footnote">
+        <li><strong>sternzeit</strong>, astronomical position math (this one)</li>
+        <li><a href="https://github.com/cgcostume/himmel-dunstkreis" target="_blank" rel="noopener">dunstkreis</a>,
+            WebGPU atmospheric scattering</li>
+        <li>gewoelk, clouds <span class="planned">planned</span></li>
+        <li>sternenzelt, star rendering <span class="planned">planned</span></li>
+        <li>nachtgestirn, moon rendering <span class="planned">planned</span></li>
+    </ul>
+    <p class="footnote">
+        MIT licensed, by <a href="https://daniellimberger.de" target="_blank" rel="noopener">Daniel Limberger</a>.
+        Ported from <a href="https://github.com/cgcostume/osghimmel" target="_blank" rel="noopener">osgHimmel</a>,
+        originally his master's thesis at the Hasso Plattner Institute.
+    </p>
+</footer>
 
 </div>
 

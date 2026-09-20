@@ -295,3 +295,38 @@ tr:nth-child(even) {
 tbody tr:hover {
     background: color-mix(in srgb, var(--accent) 10%, #fff);
 }
+
+/* Lead paragraph under the title: what the library is for, before any detail about this page. */
+.lead {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    margin: 0 0 1rem;
+}
+.lead a {
+    color: var(--accent);
+    text-decoration: none;
+}
+.lead a:hover {
+    text-decoration: underline;
+}
+.family {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #ccc;
+    color: #666;
+}
+.family a {
+    color: var(--accent);
+    text-decoration: none;
+}
+.family a:hover {
+    text-decoration: underline;
+}
+.family ul {
+    margin: 0.5rem 0;
+    padding-left: 1.2rem;
+}
+.planned {
+    color: #999;
+    font-style: italic;
+}
